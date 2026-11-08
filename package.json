@@ -1,0 +1,23 @@
+{
+  "name": "homedashboard",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Family dashboard for an idle monitor: clock, calendar, weather, US stocks & crypto (all free, no-auth sources)",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "tsx watch server/src/index.ts",
+    "dev:web": "vite web",
+    "build": "vite build web",
+    "start": "tsx server/src/index.ts",
+    "typecheck": "tsc -p server/tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

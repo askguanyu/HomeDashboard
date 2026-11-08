@@ -1,0 +1,536 @@
+/* ============ base / theme ============ */
+/* 1rem == 16px at the 1024x768 baseline; scale the whole UI with the viewport */
+:root {
+  font-size: calc(min(100vw / 64, 100vh / 48));
+  --fg: #f4f6fb;
+  --fg-dim: rgba(244, 246, 251, 0.62);
+  --fg-faint: rgba(244, 246, 251, 0.4);
+  --up: #2ecc71;
+  --down: #ff5f6d;
+  --today: #e8404a;
+  --shadow: 0 0.06rem 0.2rem rgba(0, 0, 0, 0.6), 0 0 0.7rem rgba(0, 0, 0, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #04060f;
+  color: var(--fg);
+  font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ background ============ */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.bg-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.bg-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.48) saturate(1.05);
+  transition: opacity 2s ease;
+}
+
+.bg-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 5, 12, 0.22);
+}
+
+.bg-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #04060f 0%, #0a1026 45%, #1c1440 78%, #2b1a4e 100%);
+}
+
+.bg-aurora {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55% 38% at 72% 12%, rgba(64, 196, 170, 0.14), transparent 62%),
+    radial-gradient(48% 32% at 24% 6%, rgba(122, 82, 224, 0.18), transparent 60%),
+    radial-gradient(85% 55% at 50% 112%, rgba(214, 94, 140, 0.12), transparent 62%);
+}
+
+.bg-stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============ grid engine ============ */
+.grid {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 1fr 1fr 1.27fr 1.02fr 0.84fr 0.84fr 0.84fr;
+  gap: 0.3rem;
+  padding: 0.55rem;
+  text-shadow: var(--shadow);
+}
+
+.cell {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+
+.stale-badge {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.3rem;
+  font-size: 0.62rem;
+  color: var(--fg-faint);
+}
+
+/* ============ analog clock ============ */
+.analog {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.analog .ring {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.6;
+}
+
+.analog line {
+  stroke: var(--fg);
+  stroke-linecap: round;
+}
+
+.analog .hand-sec {
+  opacity: 0.55;
+}
+
+.analog .hub {
+  fill: var(--fg);
+}
+
+/* ============ digital clock ============ */
+.clock {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0.1rem 0 0 0.15rem;
+  gap: 0.2rem;
+}
+
+.clock-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.clock-hm {
+  font-size: 8.6rem;
+  font-weight: 100;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.clock-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  transform: translateY(0.4rem);
+}
+
+.clock-sec {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.15rem;
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--fg-dim);
+}
+
+.clock-daypart {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.15rem;
+  font-size: 2.3rem;
+  line-height: 1;
+  color: var(--fg-dim);
+}
+
+.clock-date {
+  font-size: 5.58rem;
+  font-weight: 200;
+  white-space: nowrap;
+  line-height: 1.06;
+  color: var(--fg);
+}
+
+.clock-holiday {
+  font-size: 1rem;
+  color: #ffd97a;
+}
+
+/* ============ calendar (2 months stacked) ============ */
+.calendar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+.month {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.month-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 0.15rem;
+}
+
+.month-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.1fr repeat(7, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.cal-head {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  text-align: center;
+  align-self: end;
+  padding-bottom: 0.1rem;
+}
+
+.cal-weeknum {
+  font-size: 0.68rem;
+  color: var(--fg-faint);
+  text-align: center;
+  align-self: start;
+}
+
+.cal-cell {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+}
+
+.cal-day {
+  font-size: 1.02rem;
+  font-weight: 300;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.cal-cell.today .cal-day {
+  background: var(--today);
+  color: #fff;
+  font-weight: 500;
+  text-shadow: none;
+}
+
+.cal-chips {
+  position: absolute;
+  left: 0.08rem;
+  right: 0.08rem;
+  bottom: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.06rem;
+  pointer-events: none; /* kiosk: tooltips irrelevant, taps irrelevant */
+}
+
+.cal-holiday,
+.cal-fed {
+  font-size: 0.6rem;
+  border-radius: 0.15rem;
+  padding: 0.02rem 0.18rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: none;
+}
+
+.cal-holiday {
+  color: #ffe9df;
+  background: rgba(255, 122, 77, 0.42);
+}
+
+.cal-fed-fomc {
+  color: #241a02;
+  background: #ffcf6e;
+  font-weight: 600;
+}
+
+.cal-fed-speech {
+  color: #dff3ff;
+  background: rgba(60, 150, 220, 0.55);
+}
+
+.cal-cell.cal-span {
+  background: rgba(255, 207, 110, 0.1);
+}
+
+.cal-cell.cal-fomc {
+  background: rgba(255, 207, 110, 0.2);
+  box-shadow: inset 0 0 0 0.06rem rgba(255, 207, 110, 0.35);
+  border-radius: 0.2rem;
+}
+
+.cal-cell.cal-hol {
+  background: rgba(255, 122, 77, 0.16);
+  box-shadow: inset 0 0 0 0.06rem rgba(255, 122, 77, 0.45);
+  border-radius: 0.2rem;
+}
+
+/* ============ placeholder widgets ============ */
+.placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0.08rem dashed rgba(244, 246, 251, 0.22);
+  border-radius: 0.5rem;
+  color: var(--fg-faint);
+}
+
+.placeholder-title {
+  font-size: 1.15rem;
+}
+
+.placeholder-note {
+  font-size: 0.8rem;
+}
+
+/* ============ app states ============ */
+.boot,
+.fatal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--fg-dim);
+}
+
+.fatal {
+  color: var(--down);
+}
+
+/* ============ weather ============ */
+.weather {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 1.5rem 0 0 0.15rem;
+  min-height: 0;
+}
+
+.wx-now {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.wx-icon {
+  font-size: 4.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0.05rem 0.15rem rgba(0, 0, 0, 0.55));
+}
+
+.wx-temp {
+  font-size: 5.6rem;
+  font-weight: 100;
+  line-height: 1;
+}
+
+.wx-unit {
+  font-size: 2rem;
+  font-weight: 200;
+  color: var(--fg-dim);
+  vertical-align: super;
+}
+
+.wx-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.14rem;
+}
+
+.wx-text {
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.wx-feels {
+  font-size: 1.1rem;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+.wx-days {
+  display: flex;
+  gap: 1.15rem;
+  margin-top: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.wx-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.wx-dow {
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+}
+
+.wx-dicon {
+  font-size: 1.7rem;
+  line-height: 1.25;
+}
+
+.wx-dtemps {
+  font-size: 1.05rem;
+  font-weight: 300;
+}
+
+.wx-dtemps b {
+  font-weight: 400;
+}
+
+.wx-dtemps span {
+  color: var(--fg-dim);
+  margin-left: 0.25rem;
+}
+
+.wx-dpop {
+  font-size: 0.68rem;
+  color: var(--fg-faint);
+}
+
+.wx-dpop.wet {
+  color: #6db9ff;
+}
+
+.wx-details {
+  font-size: 0.92rem;
+  color: var(--fg-dim);
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.5;
+}
+
+/* ============ quotes ============ */
+.tape {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding-left: 1.6rem; /* 与左侧表盘拉开距离 */
+}
+
+.tape-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: stretch; /* 行撑满整宽,配合 space-between 两端对齐 */
+}
+
+.tape-row {
+  display: flex;
+  align-items: baseline;
+  line-height: 1.25;
+  justify-content: space-between; /* Word 式两端对齐:首尾贴边,中间均分 */
+  gap: 1rem;
+}
+
+.qgrid {
+  height: 100%;
+  display: grid;
+  align-content: center;
+  gap: 0.35rem 0.9rem;
+}
+
+.quote {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.quote.dim {
+  opacity: 0.5;
+}
+
+.q-name {
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: var(--fg);
+}
+
+.q-price {
+  font-size: 1.75rem;
+  font-weight: 300;
+}
+
+.q-pct {
+  font-size: 1.14rem;
+  font-weight: 400;
+}
+
