@@ -1,6 +1,7 @@
 /* ============ base / theme ============ */
 /* 1rem == 16px at the 1024x768 baseline; scale the whole UI with the viewport */
 :root {
+  font-size: calc(2.2vmin); /* fallback for Chrome <79 (no CSS min()); ~100vh/45 on 16:9 */
   font-size: calc(min(100vw / 64, 100vh / 48));
   --fg: #f4f6fb;
   --fg-dim: rgba(244, 246, 251, 0.62);
@@ -534,3 +535,41 @@ body {
   font-weight: 400;
 }
 
+
+/* ============ Chrome < 84: flex `gap` unsupported, simulate via margins ============ */
+.no-flexgap .clock > * + * {
+  margin-top: 0.2rem;
+}
+.no-flexgap .clock-main > * + * {
+  margin-left: 0.35rem;
+}
+.no-flexgap .calendar > * + * {
+  margin-top: 0.4rem;
+}
+.no-flexgap .cal-chips > * + * {
+  margin-top: 0.06rem;
+}
+.no-flexgap .placeholder > * + * {
+  margin-top: 0.3rem;
+}
+.no-flexgap .weather > * + * {
+  margin-top: 0.55rem;
+}
+.no-flexgap .wx-now > * + * {
+  margin-left: 0.5rem;
+}
+.no-flexgap .wx-meta > * + * {
+  margin-top: 0.14rem;
+}
+.no-flexgap .wx-days > * + * {
+  margin-left: 1.15rem;
+}
+.no-flexgap .wx-day > * + * {
+  margin-top: 0.1rem;
+}
+.no-flexgap .tape-rows > * + * {
+  margin-top: 0.9rem;
+}
+.no-flexgap .tape-row > * + * {
+  margin-left: 1rem;
+}

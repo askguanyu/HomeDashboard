@@ -12,5 +12,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // stick PC runs Chrome 72 (2018): transpile optional chaining / nullish
+    // coalescing etc. down; Chrome 61 covers native ESM + async/await.
+    target: 'chrome61',
   },
 });
