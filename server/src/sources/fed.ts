@@ -34,8 +34,11 @@ interface FomcMeeting {
 const UA = 'HomeDashboard/0.1 (personal home display; local aggregation server)';
 const TTL_MS = 24 * 3600_000;
 const EMPTY_TTL_MS = 30 * 60_000; // scraped successfully but zero events: recheck soon (edge flakiness)
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const SCHEDULE = path.join(ROOT, 'server', 'data', 'fomc-schedule.json');
+const SELF_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = process.env.HD_ROOT ? path.resolve(process.env.HD_ROOT) : path.resolve(SELF_DIR, '../../..');
+// fomc-schedule.json candidates: dev tree / portable root (HD_ROOT) / bundle
+// sibling / cwd (manual `node server.mjs` without HD_ROOT set).
+const SCHEDULES = [ROOT, SELF_DIR, process.cwd()].map((r) => path.join(r, 'server', 'data', 'fomc-schedule.json'));
 
 const WHO_CN: Record<string, string> = {
   powell: '鲍威尔',
@@ -73,10 +76,13 @@ let schedule: Record<string, FomcMeeting[]> | null = null;
 function readSchedule(): Record<string, FomcMeeting[]> {
   if (!schedule) {
     let parsed: Record<string, FomcMeeting[]> = {};
-    try {
-      parsed = JSON.parse(fs.readFileSync(SCHEDULE, 'utf8')) as Record<string, FomcMeeting[]>;
-    } catch {
-      /* bundle missing -> FOMC chips simply absent */
+    for (const f of SCHEDULES) {
+      try {
+        parsed = JSON.parse(fs.readFileSync(f, 'utf8')) as Record<string, FomcMeeting[]>;
+        break;
+      } catch {
+        /* try next candidate; if all miss, FOMC chips are absent */
+      }
     }
     schedule = parsed;
   }
@@ -160,7 +166,9 @@ export async function getFedEvents(root: string, year: number): Promise<{ year: 
       if (!speeches.length) console.warn(`[fed] ${year}: listing has 0 speeches (cached 30 min)`);
       fs.writeFileSync(cacheFile(root, year), JSON.stringify({ savedAt: Date.now(), events: speeches }));
     } catch (err) {
-      console.warn(`[fed] ${year} scrape failed:`, err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/HTTP 404/.test(msg)) console.log(`[fed] ${year} listing not published yet (HTTP 404), skipped`);
+      else console.warn(`[fed] ${year} scrape failed:`, msg);
     }
   }
   const events = [...fomc, ...speeches].sort((a, b) => a.date.localeCompare(b.date));

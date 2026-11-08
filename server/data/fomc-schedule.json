@@ -1,0 +1,359 @@
+{
+ "2021": [
+  {
+   "start": "2021-01-26",
+   "decision": "2021-01-27",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2021-03-16",
+   "decision": "2021-03-17",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2021-04-27",
+   "decision": "2021-04-28",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2021-06-15",
+   "decision": "2021-06-16",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2021-07-27",
+   "decision": "2021-07-28",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2021-09-21",
+   "decision": "2021-09-22",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2021-11-02",
+   "decision": "2021-11-03",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2021-12-14",
+   "decision": "2021-12-15",
+   "press": true,
+   "sep": true
+  }
+ ],
+ "2022": [
+  {
+   "start": "2022-01-25",
+   "decision": "2022-01-26",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2022-03-15",
+   "decision": "2022-03-16",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2022-05-03",
+   "decision": "2022-05-04",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2022-06-14",
+   "decision": "2022-06-15",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2022-07-26",
+   "decision": "2022-07-27",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2022-09-20",
+   "decision": "2022-09-21",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2022-11-01",
+   "decision": "2022-11-02",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2022-12-13",
+   "decision": "2022-12-14",
+   "press": true,
+   "sep": true
+  }
+ ],
+ "2023": [
+  {
+   "start": "2023-01-31",
+   "decision": "2023-02-01",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2023-03-21",
+   "decision": "2023-03-22",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2023-05-02",
+   "decision": "2023-05-03",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2023-06-13",
+   "decision": "2023-06-14",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2023-07-25",
+   "decision": "2023-07-26",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2023-09-19",
+   "decision": "2023-09-20",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2023-10-31",
+   "decision": "2023-11-01",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2023-12-12",
+   "decision": "2023-12-13",
+   "press": true,
+   "sep": true
+  }
+ ],
+ "2024": [
+  {
+   "start": "2024-01-30",
+   "decision": "2024-01-31",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2024-03-19",
+   "decision": "2024-03-20",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2024-04-30",
+   "decision": "2024-05-01",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2024-06-11",
+   "decision": "2024-06-12",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2024-07-30",
+   "decision": "2024-07-31",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2024-09-17",
+   "decision": "2024-09-18",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2024-11-06",
+   "decision": "2024-11-07",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2024-12-17",
+   "decision": "2024-12-18",
+   "press": true,
+   "sep": true
+  }
+ ],
+ "2025": [
+  {
+   "start": "2025-01-28",
+   "decision": "2025-01-29",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2025-03-18",
+   "decision": "2025-03-19",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2025-05-06",
+   "decision": "2025-05-07",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2025-06-17",
+   "decision": "2025-06-18",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2025-07-29",
+   "decision": "2025-07-30",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2025-08-22",
+   "decision": "2025-08-22",
+   "press": false,
+   "sep": false,
+   "notation": true
+  },
+  {
+   "start": "2025-09-16",
+   "decision": "2025-09-17",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2025-10-28",
+   "decision": "2025-10-29",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2025-12-09",
+   "decision": "2025-12-10",
+   "press": true,
+   "sep": true
+  }
+ ],
+ "2026": [
+  {
+   "start": "2026-01-27",
+   "decision": "2026-01-28",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2026-03-17",
+   "decision": "2026-03-18",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2026-04-28",
+   "decision": "2026-04-29",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2026-06-16",
+   "decision": "2026-06-17",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2026-07-28",
+   "decision": "2026-07-29",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2026-09-15",
+   "decision": "2026-09-16",
+   "press": true,
+   "sep": true
+  },
+  {
+   "start": "2026-10-27",
+   "decision": "2026-10-28",
+   "press": true,
+   "sep": false
+  },
+  {
+   "start": "2026-12-08",
+   "decision": "2026-12-09",
+   "press": false,
+   "sep": true
+  }
+ ],
+ "2027": [
+  {
+   "start": "2027-01-26",
+   "decision": "2027-01-27",
+   "press": false,
+   "sep": false
+  },
+  {
+   "start": "2027-03-16",
+   "decision": "2027-03-17",
+   "press": false,
+   "sep": true
+  },
+  {
+   "start": "2027-04-27",
+   "decision": "2027-04-28",
+   "press": false,
+   "sep": false
+  },
+  {
+   "start": "2027-06-08",
+   "decision": "2027-06-09",
+   "press": false,
+   "sep": true
+  },
+  {
+   "start": "2027-07-27",
+   "decision": "2027-07-28",
+   "press": false,
+   "sep": false
+  },
+  {
+   "start": "2027-09-14",
+   "decision": "2027-09-15",
+   "press": false,
+   "sep": true
+  },
+  {
+   "start": "2027-10-26",
+   "decision": "2027-10-27",
+   "press": false,
+   "sep": false
+  },
+  {
+   "start": "2027-12-07",
+   "decision": "2027-12-08",
+   "press": false,
+   "sep": true
+  }
+ ]
+}

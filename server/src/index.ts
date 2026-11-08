@@ -1,4 +1,5 @@
 import express, { type Request } from 'express';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
@@ -9,7 +10,7 @@ import { getWeather } from './sources/weather.js';
 import { getQuotes } from './sources/quotes.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(dirname, '../..');
+const ROOT = process.env.HD_ROOT ? path.resolve(process.env.HD_ROOT) : path.resolve(dirname, '../..');
 const PORT = Number(process.env.PORT ?? 8787);
 const startedAt = Date.now();
 
@@ -139,5 +140,10 @@ app.use((req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[homedashboard] http://localhost:${PORT} (root: ${ROOT})`);
+  console.log(`[homedashboard] http://localhost:${PORT}`);
+  const lan = Object.values(os.networkInterfaces())
+    .flat()
+    .filter((i): i is os.NetworkInterfaceInfo => !!i && i.family === 'IPv4' && !i.internal)
+    .map((i) => i.address);
+  for (const ip of lan) console.log(`[homedashboard] LAN: http://${ip}:${PORT}`);
 });

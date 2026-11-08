@@ -3,6 +3,7 @@ config/dashboard.json
 config/events.json
 node_modules/
 web/dist/
-data/
+/data/
 *.log
 .DS_Store
+release/

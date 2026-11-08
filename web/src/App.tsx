@@ -31,11 +31,12 @@ export default function App() {
         .then(([a, b]) => setHolidays([...a.holidays, ...b.holidays]))
         .catch(() => setHolidays([])); // calendar still renders without holiday labels
     Promise.all([
-      getJson<FedResponse>(`/api/fed?year=${year}`),
-      getJson<FedResponse>(`/api/fed?year=${year + 1}`),
-    ])
-      .then(([a, b]) => setFed([...a.events, ...b.events]))
-      .catch(() => setFed([])); // FOMC-only still works offline; never fatal
+      getJson<FedResponse>(`/api/fed?year=${year}`).catch(() => null),
+      getJson<FedResponse>(`/api/fed?year=${year + 1}`).catch(() => null),
+    ]).then(([a, b]) => {
+      const events = [...(a?.events ?? []), ...(b?.events ?? [])];
+      if (events.length) setFed(events);
+    });
   }, [config]);
 
   if (error) return <div className="fatal">加载失败：{error}（5 秒后自动重试）</div>;
