@@ -17,6 +17,14 @@ const startedAt = Date.now();
 const app = express();
 app.disable('x-powered-by');
 
+/** Best-effort client IP: honor reverse proxy, normalize IPv4-mapped IPv6. */
+const clientIp = (req: Request): string => {
+  const fwd = req.headers['x-forwarded-for'];
+  const first = Array.isArray(fwd) ? fwd[0] : fwd?.split(',')[0]?.trim();
+  const raw = first || req.socket.remoteAddress || req.ip || '?';
+  return raw.replace(/^::ffff:/, '');
+};
+
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
@@ -130,6 +138,16 @@ app.get('/api/quotes', async (req, res) => {
 });
 
 const dist = path.join(ROOT, 'web', 'dist');
+app.use((req, res, next) => {
+  // Log only document loads (navigation / refresh), not assets or /api polls.
+  // Browsers send `Accept: text/html,...` on navigation; js/css/images don't.
+  const accept = req.headers.accept ?? '';
+  if (req.method === 'GET' && accept.includes('text/html') && !req.path.startsWith('/api/')) {
+    console.log(`[client] ${new Date().toLocaleString()} page load from ${clientIp(req)}${req.path === '/' ? '' : ' ' + req.path}  (UA: ${req.headers['user-agent'] ?? '?'})`);
+  }
+  next();
+});
+
 app.use(express.static(dist));
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
