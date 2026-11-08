@@ -45,7 +45,15 @@ copy('web/dist', { required: true });
 copy('config/dashboard.example.json', { required: true });
 copy('config/dashboard.json', { required: true });
 copy('config/events.json');
-copy('data');
+// data caches: ship fed/weather/geo JSON only — NEVER the wallpaper cache
+// (data/backgrounds is regenerable; it alone adds tens of MB to the zip).
+if (fs.existsSync(path.join(ROOT, 'data'))) {
+  for (const e of fs.readdirSync(path.join(ROOT, 'data'), { withFileTypes: true })) {
+    if (e.name === 'backgrounds') continue;
+    fs.cpSync(path.join(ROOT, 'data', e.name), path.join(OUT, 'data', e.name), { recursive: true });
+  }
+  log('copied data/ excluding backgrounds/');
+}
 copy('LICENSE');
 copy('README.md');
 copy('server/data', { required: true });
