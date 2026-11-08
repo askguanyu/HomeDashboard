@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import { getHolidays } from './sources/holidays.js';
-import { getFedEvents } from './sources/fed.js';
+import { getFedEvents, startFedMaintenance } from './sources/fed.js';
 import { getCurrent, getBingCurrent, getMixedCurrent, getBackgroundFile } from './sources/background.js';
 import { getWeather } from './sources/weather.js';
 import { getQuotes } from './sources/quotes.js';
@@ -141,6 +141,7 @@ app.use((req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`[homedashboard] http://localhost:${PORT}`);
+  startFedMaintenance(ROOT); // weekly background scrape; page loads read disk cache only
   const lan = Object.values(os.networkInterfaces())
     .flat()
     .filter((i): i is os.NetworkInterfaceInfo => !!i && i.family === 'IPv4' && !i.internal)

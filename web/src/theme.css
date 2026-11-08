@@ -261,8 +261,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.65em;
-  aspect-ratio: 1;
+  width: 1.65em;
+  height: 1.65em; /* aspect-ratio needs Chrome 88+; stick PC is 72 -> fixed square, round via border-radius */
   border-radius: 50%;
 }
 

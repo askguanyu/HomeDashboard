@@ -32,8 +32,9 @@ interface FomcMeeting {
 }
 
 const UA = 'HomeDashboard/0.1 (personal home display; local aggregation server)';
-const TTL_MS = 24 * 3600_000;
-const EMPTY_TTL_MS = 30 * 60_000; // scraped successfully but zero events: recheck soon (edge flakiness)
+const TTL_MS = 7 * 24 * 3600_000; // weekly refresh is plenty (user request)
+const EMPTY_TTL_MS = 24 * 3600_000; // listing scraped OK but zero events: background recheck daily
+const MISSING_TTL_MS = 7 * 24 * 3600_000; // future-year 404: don't hammer, recheck weekly
 const SELF_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.HD_ROOT ? path.resolve(process.env.HD_ROOT) : path.resolve(SELF_DIR, '../../..');
 // fomc-schedule.json candidates: dev tree / portable root (HD_ROOT) / bundle
@@ -140,6 +141,8 @@ async function scrapeSpeeches(year: number): Promise<FedEvent[]> {
 interface Cached {
   savedAt: number;
   events: FedEvent[];
+  /** listing for this year returned 404 (not published yet) */
+  missing?: boolean;
 }
 
 function readCache(root: string, year: number): Cached | null {
@@ -152,25 +155,55 @@ function readCache(root: string, year: number): Cached | null {
   return null;
 }
 
-/** FOMC schedule (always available offline) + speeches for `year` (network, cached). */
-export async function getFedEvents(root: string, year: number): Promise<{ year: number; events: FedEvent[] }> {
-  const fomc = fomcEvents(year);
-  const cache = readCache(root, year);
-  let speeches = cache?.events ?? [];
-  const fresh = cache && Date.now() - cache.savedAt < (cache.events.length ? TTL_MS : EMPTY_TTL_MS);
-  if (!fresh) {
+function cacheTtl(c: Cached): number {
+  return c.missing ? MISSING_TTL_MS : c.events.length ? TTL_MS : EMPTY_TTL_MS;
+}
+
+const refreshing = new Set<number>();
+
+/** Background-only scrape. Request handlers NEVER await this, so a page
+ *  refresh only ever reads the local disk cache. */
+async function refreshYear(root: string, year: number): Promise<void> {
+  if (refreshing.has(year)) return;
+  refreshing.add(year);
+  try {
     try {
-      // throws on fetch/layout anomaly → keep serving cache; a valid listing
-      // with zero events is cached briefly so publishing is picked up same-day
-      speeches = await scrapeSpeeches(year);
-      if (!speeches.length) console.warn(`[fed] ${year}: listing has 0 speeches (cached 30 min)`);
-      fs.writeFileSync(cacheFile(root, year), JSON.stringify({ savedAt: Date.now(), events: speeches }));
+      const speeches = await scrapeSpeeches(year);
+      fs.writeFileSync(cacheFile(root, year), JSON.stringify({ savedAt: Date.now(), events: speeches } satisfies Cached));
+      console.log(`[fed] ${year}: refreshed ${speeches.length} speeches (next in 7d)`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (/HTTP 404/.test(msg)) console.log(`[fed] ${year} listing not published yet (HTTP 404), skipped`);
-      else console.warn(`[fed] ${year} scrape failed:`, msg);
+      if (/HTTP 404/.test(msg)) {
+        try {
+          fs.writeFileSync(cacheFile(root, year), JSON.stringify({ savedAt: Date.now(), events: [], missing: true } satisfies Cached));
+        } catch {
+          /* cache dir unwritable: maintenance sweep will retry */
+        }
+        console.log(`[fed] ${year} listing not published yet (HTTP 404); recheck in 7d`);
+      } else console.warn(`[fed] ${year} scrape failed (keeping old cache):`, msg);
     }
+  } finally {
+    refreshing.delete(year);
   }
-  const events = [...fomc, ...speeches].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** FOMC schedule (built-in, offline) + cached speeches. Synchronous reads only. */
+export async function getFedEvents(root: string, year: number): Promise<{ year: number; events: FedEvent[] }> {
+  const cache = readCache(root, year);
+  if (!cache || Date.now() - cache.savedAt >= cacheTtl(cache)) void refreshYear(root, year); // fire & forget
+  const events = [...fomcEvents(year), ...(cache?.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
   return { year, events };
+}
+
+/** Startup + daily sweep keeps current/next year fresh; pages never hit the network path. */
+export function startFedMaintenance(root: string): void {
+  const sweep = () => {
+    const y = new Date().getFullYear();
+    for (const year of [y, y + 1]) {
+      const c = readCache(root, year);
+      if (!c || Date.now() - c.savedAt >= cacheTtl(c)) void refreshYear(root, year);
+    }
+  };
+  sweep();
+  setInterval(sweep, 24 * 3600_000).unref();
 }
