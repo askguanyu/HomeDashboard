@@ -1,0 +1,8 @@
+DESIGN.md
+config/dashboard.json
+config/events.json
+node_modules/
+web/dist/
+data/
+*.log
+.DS_Store
