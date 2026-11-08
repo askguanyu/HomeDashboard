@@ -21,7 +21,7 @@ export function AnalogClock({ config, widget }: WidgetProps) {
   const t = tzParts(useNow(), config.timezone);
   const secondsHand = widget.options?.secondsHand !== false;
   return (
-    <svg className="analog" viewBox="0 0 100 100" preserveAspectRatio="xMinYMid meet" aria-hidden>
+    <svg className="analog" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin meet" aria-hidden>
       <circle className="ring" cx={50} cy={50} r={49} />
       <Hand deg={(t.hour % 12) * 30 + t.minute * 0.5} width={3.2} len={24} />
       <Hand deg={t.minute * 6 + t.second * 0.1} width={2} len={34} />

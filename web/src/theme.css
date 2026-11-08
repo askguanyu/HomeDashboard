@@ -480,7 +480,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* tall portrait cells: quote rows hug the top */
   position: relative;
   overflow: hidden;
   padding-left: 1.6rem; /* 与左侧表盘拉开距离 */
@@ -504,8 +504,34 @@ body {
 .qgrid {
   height: 100%;
   display: grid;
-  align-content: center;
-  gap: 0.35rem 0.9rem;
+  align-content: flex-start; /* hug top, same policy as tape */
+  grid-auto-rows: minmax(0, 1fr); /* rows split band: block reaches clock height */
+  gap: 0.5rem 2rem; /* wider gutters: cards felt cramped */
+}
+
+/* card layout inside the grid: symbol on top, big price, pct below */
+.qgrid .quote {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.qgrid .q-name {
+  font-size: 1.45rem;
+  font-weight: 400;
+  color: var(--fg);
+}
+
+.qgrid .q-price {
+  font-size: 2.1rem;
+  font-weight: 250;
+  line-height: 1.05;
+}
+
+.qgrid .q-pct {
+  font-size: 1.12rem;
 }
 
 .quote {
@@ -535,6 +561,9 @@ body {
   font-weight: 400;
 }
 
+.no-flexgap .qgrid .quote > * + * {
+  margin-top: 0.1rem;
+}
 
 /* ============ Chrome < 84: flex `gap` unsupported, simulate via margins ============ */
 .no-flexgap .clock > * + * {
@@ -572,4 +601,23 @@ body {
 }
 .no-flexgap .tape-row > * + * {
   margin-left: 1rem;
+}
+
+/* ============ portrait screens (tall windows / rotated monitor) ============ */
+@media (orientation: portrait) {
+  .weather {
+    padding-top: 0;
+    justify-content: flex-end; /* tall cell: today's block sinks down next to the forecast */
+  }
+  .wx-days {
+    margin-top: 0; /* else it stays pinned to the very bottom, splitting the gap */
+  }
+  /* quote cards: 6 columns don't fit a narrow screen - 3 columns x 4 rows */
+  .qgrid {
+    grid-template-columns: repeat(3, 1fr) !important; /* beats the inline style */
+    gap: 0.9rem 1.2rem;
+  }
+  .qgrid .q-price {
+    font-size: 2.6rem;
+  }
 }

@@ -10,8 +10,7 @@ interface SymCfg {
 
 function fmt(n: number): string {
   if (!Number.isFinite(n)) return '--';
-  const abs = Math.abs(n);
-  return n.toLocaleString('en-US', { minimumFractionDigits: abs >= 100 ? 1 : 2, maximumFractionDigits: abs >= 100 ? 1 : 2 });
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function pctText(q: Quote | undefined): string {
