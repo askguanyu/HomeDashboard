@@ -10,6 +10,8 @@ Turn an idle monitor into a family information display. A local Node server aggr
 
 All sources are free and need no API key. Everything runs on one machine; responses are disk-cached so the display degrades gracefully (stale badges) instead of breaking when the network drops.
 
+![HomeDashboard on a display](docs/screenshot.jpg)
+
 ## Install
 
 Requires Node.js ≥ 20.
@@ -82,6 +84,8 @@ The kiosk browser never touches the internet directly: all external fetches (Bin
 - **壁纸** — Bing 与 NASA 图库整点轮换或每日更新，内置生成式星空兜底
 
 所有数据源免费、无需 API key。单机运行，响应带磁盘缓存，断网时显示"陈旧"角标和最后一次成功数据，而不是白屏。
+
+![HomeDashboard 实机效果](docs/screenshot.jpg)
 
 ## 安装
 
