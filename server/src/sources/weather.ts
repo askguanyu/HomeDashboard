@@ -324,17 +324,37 @@ function cacheFile(root: string): string {
   return path.join(root, 'data', 'weather-cache.json');
 }
 
-function readCache(root: string): WeatherPayload | null {
-  try {
-    const c = JSON.parse(fs.readFileSync(cacheFile(root), 'utf8')) as WeatherPayload;
-    if (c.current && Array.isArray(c.daily)) return c;
-  } catch {
-    /* none */
-  }
-  return null;
+interface CacheFile {
+  entries: Record<string, WeatherPayload>;
 }
 
-let inflight: Promise<WeatherPayload> | null = null;
+/** Key covers everything that changes the payload: units, forecast days, timezone, coordinates. */
+function cacheKey(units: string, days: number, timezone: string, c: Coords): string {
+  return `${units}|${days}|${timezone}|${c.lat},${c.lon}`;
+}
+
+function readCacheFile(root: string): CacheFile {
+  try {
+    const f = JSON.parse(fs.readFileSync(cacheFile(root), 'utf8')) as CacheFile;
+    if (f && typeof f.entries === 'object' && f.entries) return f;
+  } catch {
+    /* none or old single-payload format */
+  }
+  return { entries: {} };
+}
+
+function readCache(root: string, key: string): WeatherPayload | null {
+  const e = readCacheFile(root).entries[key];
+  return e && e.current && Array.isArray(e.daily) ? e : null;
+}
+
+function writeCache(root: string, key: string, payload: WeatherPayload): void {
+  const f = readCacheFile(root);
+  f.entries[key] = payload;
+  fs.writeFileSync(cacheFile(root), JSON.stringify(f));
+}
+
+let inflight: { key: string; p: Promise<WeatherPayload> } | null = null;
 
 export async function getWeather(
   root: string,
@@ -343,11 +363,12 @@ export async function getWeather(
   days: number,
   timezone: string,
 ): Promise<WeatherPayload> {
-  const cache = readCache(root);
-  if (cache && Date.now() - cache.updatedAt < TTL_MS && cache.units === units) return cache;
-  if (inflight) return inflight; // widget + tape hammering: dedupe concurrent refreshes
-  inflight = (async () => {
-    const c = await resolveCoords(root, loc);
+  const c = await resolveCoords(root, loc);
+  const key = cacheKey(units, days, timezone, c);
+  const cache = readCache(root, key);
+  if (cache && Date.now() - cache.updatedAt < TTL_MS) return cache;
+  if (inflight && inflight.key === key) return inflight.p; // concurrent same-key refreshes: dedupe
+  const job = (async () => {
     let payload: Omit<WeatherPayload, 'updatedAt' | 'stale'> | null = null;
     let lastErr: unknown = null;
     try {
@@ -362,7 +383,7 @@ export async function getWeather(
     }
     if (payload) {
       const fresh: WeatherPayload = { ...payload, updatedAt: Date.now(), stale: false };
-      fs.writeFileSync(cacheFile(root), JSON.stringify(fresh));
+      writeCache(root, key, fresh);
       return fresh;
     }
     if (cache) {
@@ -370,8 +391,12 @@ export async function getWeather(
       return { ...cache, stale: true };
     }
     throw lastErr instanceof Error ? lastErr : new Error('weather: all sources failed');
-  })().finally(() => {
-    inflight = null;
-  });
-  return inflight;
+  })();
+  inflight = { key, p: job };
+  job
+    .catch(() => {})
+    .finally(() => {
+      if (inflight && inflight.p === job) inflight = null;
+    });
+  return job;
 }
