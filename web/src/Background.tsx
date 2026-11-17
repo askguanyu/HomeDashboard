@@ -88,6 +88,10 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
       </div>
     );
   }
+  // DESIGN.md F10: bottom-right caption = wallpaper title · attribution.
+  const top = layers.find((l) => l.visible) ?? layers[0];
+  const credit = top ? [top.info.item.title, top.info.item.credit].filter(Boolean).join(' · ') : '';
+
   return (
     <div className="bg">
       <Starry /> {/* base layer while first image loads / behind fade */}
@@ -95,6 +99,7 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         <div key={l.info.key} className="bg-photo" style={{ opacity: l.visible ? 1 : 0, backgroundImage: `url("${l.url}")` }} />
       ))}
       <div className="bg-scrim" />
+      {credit && <div className="bg-credit">{credit}</div>}
     </div>
   );
 }

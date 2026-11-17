@@ -89,7 +89,7 @@ export function Weather({ widget, config }: WidgetProps) {
     <div className="weather">
       {data.stale || failing ? <div className="stale-badge" role="status">缓存数据</div> : null}
       <div className="wx-now">
-        <span className="wx-icon">{icon(c.code)}</span>
+        <span className="wx-icon" aria-hidden="true">{icon(c.code)}</span>
         <div className="wx-temp">
           {c.temp}
           <span className="wx-unit">{deg}</span>
@@ -107,7 +107,7 @@ export function Weather({ widget, config }: WidgetProps) {
         {data.daily.slice(1).map((d) => (
           <div className="wx-day" key={d.date}>
             <div className="wx-dow">{weekday.format(new Date(`${d.date}T12:00:00`))}</div>
-            <div className="wx-dicon">{icon(d.code)}</div>
+            <div className="wx-dicon" aria-hidden="true">{icon(d.code)}</div>
             <div className="wx-dtemps">
               <b>{d.hi}</b>
               <span>{d.lo}</span>

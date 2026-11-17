@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-/** Re-render every second, aligned-ish; widgets read fresh parts from the returned Date. */
-export function useNow(): Date {
+/** Wall-clock tick. Default 1s for the clocks; day-level widgets pass a coarser step. */
+export function useNow(intervalMs = 1000): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    const id = setInterval(() => setNow(new Date()), intervalMs);
     return () => clearInterval(id);
-  }, []);
+  }, [intervalMs]);
   return now;
 }
 

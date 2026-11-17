@@ -1,8 +1,12 @@
 /* ============ base / theme ============ */
 /* 1rem == 16px at the 1024x768 baseline; scale the whole UI with the viewport */
 :root {
+  /* The last term, (1rem - 16px), is the user's own font-size preference measured
+     against the 16px default: it is 0 at default settings, so the fit is pixel-identical
+     to pure viewport scaling, and it lifts the whole rem scale when OS/browser text
+     scaling is on (see <meta name="text-scale"> in index.html) instead of overriding it. */
   font-size: calc(2.2vmin); /* fallback for Chrome <79 (no CSS min()); ~100vh/45 on 16:9 */
-  font-size: calc(min(100vw / 64, 100vh / 48));
+  font-size: calc(min(100vw / 64, 100vh / 48) + (1rem - 16px));
   --fg: #f4f6fb;
   --fg-dim: rgba(244, 246, 251, 0.62);
   --fg-faint: rgba(244, 246, 251, 0.48); /* >= 4.5:1 on #04060f for the 10-15px labels */
@@ -28,6 +32,21 @@ body {
   color: var(--fg);
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+}
+
+/* Screen-reader-only text: keeps the accessible name/heading without painting ink on a
+   fixed-geometry kiosk grid. clip-path needs Chrome 55, inset() needs 88 -> both forms. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ============ background ============ */
@@ -64,6 +83,22 @@ body {
   position: absolute;
   inset: 0;
   background: rgba(3, 5, 12, 0.22);
+}
+/* DESIGN.md F10: bottom-right caption = current wallpaper title + attribution. */
+.bg-credit {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.35rem;
+  max-width: 40%;
+  font-size: 0.62rem;
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--fg-faint);
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .bg-sky {
@@ -199,6 +234,10 @@ body {
   white-space: nowrap;
   line-height: 1.06;
   color: var(--fg);
+  /* text scale up: ellipsize instead of cutting a glyph mid-height (WCAG 1.4.10) */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .clock-holiday {
@@ -222,19 +261,44 @@ body {
   flex-direction: column;
 }
 
+/* <h3>, so clear the UA heading box model. */
 .month-title {
+  margin: 0 0 0.15rem;
   text-align: center;
   font-size: 1.5rem;
   font-weight: 300;
-  margin-bottom: 0.15rem;
 }
 
+/* Real <table> laid out with CSS grid: rows/columns become grid items via
+   display:contents, and the UA cell styles that survive blockification are reset.
+   Explicit ARIA roles (see Calendar.tsx) keep the table model intact for Chrome,
+   which drops table semantics once display is not table-*. */
 .month-grid {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 1.1fr repeat(7, 1fr);
   grid-auto-rows: minmax(0, 1fr);
+  border-collapse: collapse;
+  text-indent: 0;
+}
+
+.month-grid.no-wn {
+  grid-template-columns: repeat(7, 1fr); /* no week-number gutter when it is off */
+}
+
+.month-grid > thead,
+.month-grid > tbody,
+.month-grid tr {
+  display: contents;
+}
+
+.month-grid th,
+.month-grid td {
+  padding: 0;
+  border: 0;
+  font-weight: inherit;
+  text-align: inherit;
 }
 
 .cal-head {
@@ -546,6 +610,13 @@ body {
   align-items: baseline;
   gap: 0.35rem;
   white-space: nowrap;
+  min-width: 0; /* allow the row to shrink and ellipsize rather than clip mid-glyph */
+}
+
+.quote > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Stale / missing quotes fade to --fg-faint: `opacity: .5` washed the pct text out to 1.68:1. */
@@ -654,5 +725,42 @@ body {
   }
   .qgrid .q-price {
     font-size: 2.6rem;
+  }
+}
+
+/* ============ Forced Colors Mode (Windows high contrast / "more contrast") ============
+   FCM discards background-image, gradients and box-shadow, so every boundary that was
+   only a tint or a glow has to come back as a real border. Text colours are handled by
+   the system itself; today's cell additionally carries aria-current="date" so it is not
+   distinguished by colour alone. */
+@media (forced-colors: active) {
+  .bg-photo,
+  .bg-image,
+  .bg-sky,
+  .bg-aurora,
+  .bg-stars,
+  .bg-scrim {
+    display: none; /* wallpaper never fights the system canvas */
+  }
+  .cal-holiday,
+  .cal-fed {
+    border: 0.06rem solid CanvasText;
+    border-radius: 0;
+    background: Canvas;
+  }
+  .cal-cell.cal-span,
+  .cal-cell.cal-hol,
+  .cal-cell.cal-fomc {
+    box-shadow: none;
+    outline: 0.08rem solid CanvasText;
+  }
+  .cal-cell.today .cal-day {
+    background: Canvas;
+    color: CanvasText;
+    outline: 0.1rem solid Highlight;
+  }
+  .placeholder {
+    border-style: solid;
+    border-color: CanvasText;
   }
 }

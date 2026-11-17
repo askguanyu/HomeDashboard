@@ -1,7 +1,7 @@
 import type { DashboardConfig, FedEvent, Holiday } from './api';
 import { ComingSoon } from './widgets/Placeholder';
 import { ErrorBoundary } from './widgets/ErrorBoundary';
-import { resolveWidget } from './widgets/registry';
+import { resolveWidget, WIDGET_LABELS } from './widgets/registry';
 export function DashboardGrid({
   config,
   holidays,
@@ -12,7 +12,8 @@ export function DashboardGrid({
   fed: FedEvent[];
 }) {
   return (
-    <div className="grid">
+    <main className="grid">
+      <h1 className="visually-hidden">Home Dashboard</h1>
       {config.widgets.map((w) => {
         const C = resolveWidget(w.type);
         return (
@@ -24,6 +25,7 @@ export function DashboardGrid({
               gridRow: `${w.area.row[0]} / ${w.area.row[1]}`,
             }}
           >
+            <h2 className="visually-hidden">{WIDGET_LABELS[w.type] ?? w.type}</h2>
             <ErrorBoundary id={w.id}>
               {C ? (
                 <C widget={w} config={config} holidays={holidays} fed={fed} />
@@ -34,6 +36,6 @@ export function DashboardGrid({
           </div>
         );
       })}
-    </div>
+    </main>
   );
 }
