@@ -51,7 +51,10 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         const info = (await r.json()) as BgInfo;
         if (!alive || keyRef.current === info.key) return;
         const probe = new Image();
-        const url = `${info.image}?v=${info.key}&mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`;
+        // No cache-busting `v=`: this URL must match the <link rel="preload"> the
+        // server injects into index.html, and freshness comes from the server's
+        // `max-age=0, must-revalidate` + ETag on /api/background/image.
+        const url = `${info.image}?mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`;
         probe.onload = () => {
           if (!alive) return;
           keyRef.current = info.key;
@@ -68,13 +71,15 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         if (alive && keyRef.current === null) setFailed(true);
       }
     };
+    // Wallpaper identity changes with mode/market, so forget the last key and refetch.
+    keyRef.current = null;
     check();
     const id = setInterval(check, 60_000);
     return () => {
       alive = false;
       clearInterval(id);
     };
-  }, []);
+  }, [mode, market]);
 
   if (failed) {
     return (
@@ -87,7 +92,7 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
     <div className="bg">
       <Starry /> {/* base layer while first image loads / behind fade */}
       {layers.map((l) => (
-        <div key={l.url} className="bg-photo" style={{ opacity: l.visible ? 1 : 0, backgroundImage: `url(${l.url})` }} />
+        <div key={l.info.key} className="bg-photo" style={{ opacity: l.visible ? 1 : 0, backgroundImage: `url("${l.url}")` }} />
       ))}
       <div className="bg-scrim" />
     </div>
@@ -99,7 +104,8 @@ export function Background({ mode, image, market }: { mode: string; image: strin
   if (image) {
     return (
       <div className="bg">
-        <div className="bg-image" style={{ backgroundImage: `url(${image})` }} />
+        <div className="bg-image" style={{ backgroundImage: `url("${image}")` }} />
+        <div className="bg-scrim" />
       </div>
     );
   }

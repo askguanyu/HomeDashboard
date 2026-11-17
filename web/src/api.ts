@@ -24,6 +24,9 @@ export interface DashboardConfig {
   widgets: WidgetConfig[];
 }
 
+/** Intl formatting locale; the dashboard copy is Chinese, so that is the fallback. */
+export const uiLocale = (config: DashboardConfig): string => config.locale || 'zh-CN';
+
 export interface Holiday {
   name: string;
   date: string; // YYYY-MM-DD

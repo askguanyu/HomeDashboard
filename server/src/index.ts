@@ -1,8 +1,9 @@
-import express, { type Request } from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadConfig } from './config.js';
+import { loadConfig, type DashboardConfig } from './config.js';
 import { getHolidays } from './sources/holidays.js';
 import { getFedEvents, startFedMaintenance } from './sources/fed.js';
 import { getCurrent, getBingCurrent, getMixedCurrent, getBackgroundFile } from './sources/background.js';
@@ -100,8 +101,13 @@ app.get('/api/background/image', async (req, res) => {
   try {
     const { item } = await pickBackground(req);
     const file = await getBackgroundFile(ROOT, item);
-    res.setHeader('cache-control', 'public, max-age=3600');
-    res.type('image/jpeg').sendFile(file, (err) => {
+    // The URL is stable across wallpaper rotations, so freshness has to come from
+    // revalidation. getBackgroundFile touches the file's mtime on every hit (LRU), which
+    // would churn stat-derived validators, so the wallpaper id is the content identity:
+    // same wallpaper -> 304, rotated -> new bytes.
+    res.setHeader('cache-control', 'public, max-age=0, must-revalidate');
+    res.set('etag', `"bg-${item.id}"`);
+    res.type('image/jpeg').sendFile(file, { etag: false, lastModified: false }, (err) => {
       if (err && !res.headersSent) res.status(502).json({ error: 'background file unreadable' });
     });
   } catch (err) {
@@ -138,6 +144,43 @@ app.get('/api/quotes', async (req, res) => {
 });
 
 const dist = path.join(ROOT, 'web', 'dist');
+
+/**
+ * Wallpaper URL the browser can start downloading alongside the document, before React
+ * resolves /api/config + /api/background. Must build byte-identical URLs to
+ * web/src/Background.tsx, or the preload is just a second download.
+ */
+function preloadImageUrl(cfg: DashboardConfig): string | null {
+  const theme = cfg.theme;
+  if (theme?.backgroundImage) return theme.backgroundImage;
+  const mode = theme?.background ?? 'starry';
+  if (!(mode === 'mix' || mode === 'nasa-rotate' || mode.startsWith('bing'))) return null;
+  const market = theme?.backgroundMarket || 'en-US';
+  return `/api/background/image?mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`;
+}
+
+/** Built index.html plus a preload hint: CSS-background images get no scanner priority. */
+function sendShell(_req: Request, res: Response, next: NextFunction): void {
+  let html: string;
+  try {
+    html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+  } catch (err) {
+    return next(err);
+  }
+  let preload = '';
+  try {
+    const url = preloadImageUrl(loadConfig(ROOT));
+    if (url) {
+      const href = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      preload = `\n    <link rel="preload" as="image" fetchpriority="high" href="${href}" />`;
+    }
+  } catch {
+    // Bad or missing config: still serve the shell; the client shows its own error.
+  }
+  res.set('cache-control', 'no-cache'); // the shell must revalidate so rebuilt bundles are picked up
+  res.type('html').send(html.replace('</head>', `${preload}\n  </head>`));
+}
+
 app.use((req, res, next) => {
   // Log only document loads (navigation / refresh), not assets or /api polls.
   // Browsers send `Accept: text/html,...` on navigation; js/css/images don't.
@@ -148,10 +191,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(dist));
+app.get('/', sendShell);
+app.use(express.static(dist, { index: false })); // '/' belongs to sendShell above
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-    res.sendFile(path.join(dist, 'index.html'), (err) => next(err));
+    sendShell(req, res, next);
   } else {
     next();
   }

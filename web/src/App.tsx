@@ -39,7 +39,7 @@ export default function App() {
     });
   }, [config]);
 
-  if (error) return <div className="fatal">加载失败：{error}（5 秒后自动重试）</div>;
+  if (error) return <div className="fatal" role="alert">加载失败：{error}（5 秒后自动重试）</div>;
   if (!config) return <div className="boot">Home Dashboard 启动中…</div>;
 
   return (

@@ -1,5 +1,5 @@
 import { usePoll } from '../hooks';
-import type { WeatherPayload } from '../api';
+import { uiLocale, type WeatherPayload } from '../api';
 import type { WidgetProps } from './types';
 
 const ICONS: Record<number, string> = {
@@ -45,12 +45,12 @@ function windLabel(deg: number | null, speed: number | null, units: string): str
   return `${dir} ${Math.round(speed)}\u00a0${units === 'metric' ? 'km/h' : 'mph'}`;
 }
 
-const WEEKDAY = new Intl.DateTimeFormat('zh-CN', { weekday: 'short' });
-export function Weather({ widget }: WidgetProps) {
+export function Weather({ widget, config }: WidgetProps) {
   const opts = widget.options ?? {};
   const details = (opts.details as string[] | undefined) ?? ['sunrise', 'wind', 'humidity', 'pressure', 'visibility'];
   const days = Number(opts.forecastDays ?? 5);
   const units = opts.units === 'metric' ? 'metric' : 'imperial';
+  const weekday = new Intl.DateTimeFormat(uiLocale(config), { weekday: 'short' });
   const { data, failing } = usePoll<WeatherPayload>(`/api/weather?units=${units}&days=${days}`, 10 * 60_000);
 
   if (!data) {
@@ -87,7 +87,7 @@ export function Weather({ widget }: WidgetProps) {
 
   return (
     <div className="weather">
-      {data.stale || failing ? <div className="stale-badge">缓存数据</div> : null}
+      {data.stale || failing ? <div className="stale-badge" role="status">缓存数据</div> : null}
       <div className="wx-now">
         <span className="wx-icon">{icon(c.code)}</span>
         <div className="wx-temp">
@@ -106,7 +106,7 @@ export function Weather({ widget }: WidgetProps) {
       <div className="wx-days">
         {data.daily.slice(1).map((d) => (
           <div className="wx-day" key={d.date}>
-            <div className="wx-dow">{WEEKDAY.format(new Date(`${d.date}T12:00:00`))}</div>
+            <div className="wx-dow">{weekday.format(new Date(`${d.date}T12:00:00`))}</div>
             <div className="wx-dicon">{icon(d.code)}</div>
             <div className="wx-dtemps">
               <b>{d.hi}</b>

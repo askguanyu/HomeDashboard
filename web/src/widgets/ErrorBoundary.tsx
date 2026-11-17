@@ -15,7 +15,7 @@ export class ErrorBoundary extends Component<{ id: string; children: ReactNode }
 
   render() {
     if (this.state.err) {
-      return <Placeholder title={`widget "${this.props.id}" 异常`} note={this.state.err.message} />;
+      return <Placeholder live title={`widget "${this.props.id}" 异常`} note={this.state.err.message} />;
     }
     return this.props.children;
   }

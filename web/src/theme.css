@@ -5,7 +5,7 @@
   font-size: calc(min(100vw / 64, 100vh / 48));
   --fg: #f4f6fb;
   --fg-dim: rgba(244, 246, 251, 0.62);
-  --fg-faint: rgba(244, 246, 251, 0.4);
+  --fg-faint: rgba(244, 246, 251, 0.48); /* >= 4.5:1 on #04060f for the 10-15px labels */
   --up: #2ecc71;
   --down: #ff5f6d;
   --today: #e8404a;
@@ -51,7 +51,13 @@ body {
   background-size: cover;
   background-position: center;
   filter: brightness(0.48) saturate(1.05);
-  transition: opacity 2s ease;
+}
+
+/* Wallpaper crossfade only for users who allow motion; reduced motion swaps instantly. */
+@media (prefers-reduced-motion: no-preference) {
+  .bg-photo {
+    transition: opacity 2s ease;
+  }
 }
 
 .bg-scrim {
@@ -504,6 +510,7 @@ body {
 .qgrid {
   height: 100%;
   display: grid;
+  grid-template-columns: repeat(var(--qcols, 4), 1fr); /* set from widget options */
   align-content: flex-start; /* hug top, same policy as tape */
   grid-auto-rows: minmax(0, 1fr); /* rows split band: block reaches clock height */
   gap: 0.5rem 2rem; /* wider gutters: cards felt cramped */
@@ -541,8 +548,10 @@ body {
   white-space: nowrap;
 }
 
-.quote.dim {
-  opacity: 0.5;
+/* Stale / missing quotes fade to --fg-faint: `opacity: .5` washed the pct text out to 1.68:1. */
+.quote.dim .q-name,
+.quote.dim .q-price {
+  color: var(--fg-faint);
 }
 
 .q-name {
@@ -559,6 +568,32 @@ body {
 .q-pct {
   font-size: 1.14rem;
   font-weight: 400;
+}
+
+/* Direction color lives in CSS so the portrait rules below can override it without
+   !important. --q-up/--q-down swap for red-up markets. */
+.tape,
+.qgrid {
+  --q-up: var(--up);
+  --q-down: var(--down);
+}
+
+.tape[data-redup='true'],
+.qgrid[data-redup='true'] {
+  --q-up: var(--down);
+  --q-down: var(--up);
+}
+
+.q-pct[data-tone='up'] {
+  color: var(--q-up);
+}
+
+.q-pct[data-tone='down'] {
+  color: var(--q-down);
+}
+
+.q-pct[data-tone='none'] {
+  color: var(--fg-faint);
 }
 
 .no-flexgap .qgrid .quote > * + * {
@@ -614,7 +649,7 @@ body {
   }
   /* quote cards: 6 columns don't fit a narrow screen - 3 columns x 4 rows */
   .qgrid {
-    grid-template-columns: repeat(3, 1fr) !important; /* beats the inline style */
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.9rem 1.2rem;
   }
   .qgrid .q-price {
