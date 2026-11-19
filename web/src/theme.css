@@ -278,6 +278,12 @@ body {
   flex-direction: column;
   gap: 0.4rem;
   overflow: hidden;
+  /* Same grid row as the clock, so the two cells share a top edge, but the numerals' ink
+     starts 1.82rem below it (0.1rem .clock padding + line-height:1 squeezing Segoe UI's
+     1.333em content box into 1em: -0.167em half-leading + 1.08em ascent - 0.713em digit
+     height, x8.6rem) while the month title's ink started at 0.57rem. 1.3rem closes that
+     1.22rem gap and keeps the title just under the numerals at every viewport. */
+  padding-top: 1.3rem;
 }
 
 .month {
