@@ -51,10 +51,13 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         const info = (await r.json()) as BgInfo;
         if (!alive || keyRef.current === info.key) return;
         const probe = new Image();
-        // No cache-busting `v=`: this URL must match the <link rel="preload"> the
-        // server injects into index.html, and freshness comes from the server's
-        // `max-age=0, must-revalidate` + ETag on /api/background/image.
-        const url = `${info.image}?mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`;
+        // The hour key keeps every rotation a distinct URL: older Chromium (the stick PC's
+        // pinned Chrome) can answer a repeat URL straight from its image cache without
+        // revalidating, which freezes the wallpaper on the first one. The <link rel="preload">
+        // the server injects into index.html carries the same `k=` (see preloadImageUrl),
+        // so the first paint still reuses the preloaded bytes; within an hour the id-based
+        // ETag on /api/background/image turns reloads into 304s.
+        const url = `${info.image}?k=${info.key}&mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`;
         probe.onload = () => {
           if (!alive) return;
           keyRef.current = info.key;
