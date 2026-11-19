@@ -1,0 +1,23 @@
+# Line endings: store LF, check out LF on every platform.
+# Without this, core.autocrlf=true makes the working tree CRLF while the repo holds
+# LF, so one editor save rewrites the whole file and diffs/blame turn into noise.
+* text=auto eol=lf
+
+# Windows batch launchers (scripts/make-release.mjs generates these): cmd.exe
+# misparses LF-only files, so they must stay CRLF.
+*.bat eol=crlf
+*.cmd eol=crlf
+
+# Binary payloads: never touch their bytes.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.zip binary
+*.exe binary
+*.node binary
