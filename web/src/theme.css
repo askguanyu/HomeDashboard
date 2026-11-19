@@ -278,12 +278,7 @@ body {
   flex-direction: column;
   gap: 0.4rem;
   overflow: hidden;
-  /* Both cells start on grid row 3 and share a top edge, but the clock numerals' ink begins
-     40.25px below it at 1920x1080 (33.87px at 1200x1920) - line-height:1 squeezes Segoe UI's
-     1.333em content box into 1em at 8.6rem - while the month title's ink sits 12px / 10.9px
-     under its own padding edge. Measured on those numbers, not derived: 1.25rem levels them,
-     1.3rem lands ~1px below, 1.2rem ~1.3px above, this 1rem ~5.4px above. */
-  padding-top: 1.0rem;
+  padding-top: 1.1rem;
 }
 
 .month {
@@ -310,6 +305,10 @@ body {
   min-height: 0;
   display: grid;
   grid-template-columns: 1.1fr repeat(7, 1fr);
+  /* The weekday header is a grid item too, so an all-1fr track list gives it a whole day
+     row's height: 51px per month at 1920x1080, 103px at 1200x1920, all of it stolen from
+     the days. Pin the header to its content and let the day rows split what it gives back. */
+  grid-template-rows: auto;
   grid-auto-rows: minmax(0, 1fr);
   border-collapse: collapse;
   text-indent: 0;
@@ -348,27 +347,43 @@ body {
   align-self: start;
 }
 
+/* Same two bands as a day cell, so the ISO week number lines up with the digits. */
+tbody .cal-weeknum {
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 0.8rem;
+  align-items: center;
+  justify-items: center;
+}
+
+/* Two fixed bands per day: digits in the flex band, the event chip in a 0.8rem band pinned to
+   the cell's bottom edge, so the bar doubles as the bottom of the .cal-speech/.cal-fomc/.cal-hol
+   frame rather than floating inside it. Band heights ignore content, so every digit in a month
+   shares one y and a chip can never sit on top of a digit (it used to, by up to 8.9px at
+   1920x1080). A second chip on the same day clips at the band's top edge, never on a digit. */
 .cal-cell {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 0.8rem;
+  justify-items: center;
   min-height: 0;
+  overflow: hidden;
 }
 
 .cal-day {
-  font-size: 1.02rem;
+  align-self: center;
+  font-size: 1.25rem; /* max size whose two-digit ink still sits inside a true circle in the band */
   font-weight: 300;
   line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.65em;
-  height: 1.65em; /* aspect-ratio needs Chrome 88+; stick PC is 72 -> fixed square, round via border-radius */
-  border-radius: 50%;
 }
 
 .cal-cell.today .cal-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.68rem; /* perfect circle: side is rem, not em, so it does not track the digit size */
+  height: 1.68rem; /* Chrome 72 has no aspect-ratio -> fixed square (square + 50% radius = circle) */
+  border-radius: 50%;
   background: var(--today);
   color: #fff;
   font-weight: 500;
@@ -376,22 +391,25 @@ body {
 }
 
 .cal-chips {
-  position: absolute;
-  left: 0.08rem;
-  right: 0.08rem;
-  bottom: 0.1rem;
+  grid-row: 2;
+  justify-self: stretch;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.06rem;
+  gap: 0.05rem;
+  justify-content: flex-end; /* hugs the band/cell bottom: the bar merges with the frame edge */
+  overflow: hidden;
   pointer-events: none; /* kiosk: tooltips irrelevant, taps irrelevant */
 }
 
 .cal-holiday,
 .cal-fed {
   font-size: 0.6rem;
-  border-radius: 0.15rem;
-  padding: 0.02rem 0.18rem;
+  line-height: 1.12; /* keeps one chip inside the 0.8rem band (body leading 1.35 overflowed it) */
+  border-radius: 0.15rem 0.15rem 0 0; /* square bottom corners: the bar is the frame's bottom */
+  padding: 0.02rem 0.16rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
