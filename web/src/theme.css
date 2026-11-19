@@ -50,23 +50,34 @@ body {
 }
 
 /* ============ background ============ */
+/* Full-cover layers use the four inset longhands everywhere: the `inset` shorthand is
+   Chrome 87+, and the stick PC is pinned to Chrome 72 (DESIGN.md §6.4). */
 .bg {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: -1;
   overflow: hidden;
 }
 
 .bg-image {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background-size: cover;
   background-position: center;
 }
 
 .bg-photo {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background-size: cover;
   background-position: center;
   filter: brightness(0.48) saturate(1.05);
@@ -81,7 +92,10 @@ body {
 
 .bg-scrim {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(3, 5, 12, 0.22);
 }
 /* DESIGN.md F10: bottom-right caption = current wallpaper title + attribution. */
@@ -103,13 +117,19 @@ body {
 
 .bg-sky {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: linear-gradient(180deg, #04060f 0%, #0a1026 45%, #1c1440 78%, #2b1a4e 100%);
 }
 
 .bg-aurora {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background:
     radial-gradient(55% 38% at 72% 12%, rgba(64, 196, 170, 0.14), transparent 62%),
     radial-gradient(48% 32% at 24% 6%, rgba(122, 82, 224, 0.18), transparent 60%),
@@ -118,7 +138,10 @@ body {
 
 .bg-stars {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
@@ -126,10 +149,13 @@ body {
 /* ============ grid engine ============ */
 .grid {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: 1fr 1fr 1.27fr 1.02fr 0.84fr 0.84fr 0.84fr;
+  grid-template-rows: 1fr 1fr 1.27fr 0.953fr 0.8623fr 0.8623fr 0.8623fr; /* 16:9: the clock cell's ~15px of slack under 日期 funds the weather cell's new 体感 row (portrait keeps the old split) */
   gap: 0.3rem;
   padding: 0.55rem;
   text-shadow: var(--shadow);
@@ -386,6 +412,13 @@ body {
   background: rgba(255, 207, 110, 0.1);
 }
 
+/* Fed speech: boxed like a holiday, in the speech chip's blue */
+.cal-cell.cal-speech {
+  background: rgba(60, 150, 220, 0.16);
+  box-shadow: inset 0 0 0 0.06rem rgba(96, 176, 232, 0.55);
+  border-radius: 0.2rem;
+}
+
 .cal-cell.cal-fomc {
   background: rgba(255, 207, 110, 0.2);
   box-shadow: inset 0 0 0 0.06rem rgba(255, 207, 110, 0.35);
@@ -423,7 +456,10 @@ body {
 .boot,
 .fatal {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -441,8 +477,8 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 0.55rem;
-  padding: 1.5rem 0 0 0.15rem;
+  gap: 0.45rem;
+  padding: 1.1rem 0 0 0.15rem;
   min-height: 0;
 }
 
@@ -465,28 +501,37 @@ body {
   line-height: 1;
 }
 
+/* °C stacked over 晴: same treatment as the clock's .clock-side (small dim labels
+   hanging off the right of the big number). padding-top lines the °C up with the digits' cap. */
+.wx-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start;
+  gap: 0.15rem;
+  padding-top: 0.85rem;
+}
+
 .wx-unit {
   font-size: 2rem;
   font-weight: 200;
+  line-height: 1;
   color: var(--fg-dim);
-  vertical-align: super;
-}
-
-.wx-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.14rem;
 }
 
 .wx-text {
   font-size: 1.5rem;
   font-weight: 300;
+  line-height: 1;
+  color: var(--fg-dim);
+  white-space: nowrap;
 }
 
 .wx-feels {
   font-size: 1.1rem;
-  color: var(--fg-dim);
+  /* full-strength --fg on purpose: this row carries today's range, it is not chrome */
   white-space: nowrap;
+  line-height: 1.25; /* single line: the inherited 1.5 cost a row of the 1080p budget */
 }
 
 .wx-days {
@@ -501,7 +546,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.06rem;
+  line-height: 1.1; /* stacked one-line cells: the inherited 1.5 cost ~16px of the 1080p budget */
 }
 
 .wx-dow {
@@ -511,7 +557,7 @@ body {
 
 .wx-dicon {
   font-size: 1.7rem;
-  line-height: 1.25;
+  line-height: 1.05; /* emoji cell: 1.15 still cost more than the glyph box */
 }
 
 .wx-dtemps {
@@ -542,7 +588,7 @@ body {
   color: var(--fg-dim);
   white-space: normal;
   overflow-wrap: break-word;
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 /* ============ quotes ============ */
@@ -688,19 +734,19 @@ body {
   margin-top: 0.3rem;
 }
 .no-flexgap .weather > * + * {
-  margin-top: 0.55rem;
+  margin-top: 0.45rem;
 }
 .no-flexgap .wx-now > * + * {
   margin-left: 0.5rem;
 }
-.no-flexgap .wx-meta > * + * {
-  margin-top: 0.14rem;
+.no-flexgap .wx-side > * + * {
+  margin-top: 0.15rem;
 }
 .no-flexgap .wx-days > * + * {
   margin-left: 1.15rem;
 }
 .no-flexgap .wx-day > * + * {
-  margin-top: 0.1rem;
+  margin-top: 0.06rem;
 }
 .no-flexgap .tape-rows > * + * {
   margin-top: 0.9rem;
@@ -711,6 +757,9 @@ body {
 
 /* ============ portrait screens (tall windows / rotated monitor) ============ */
 @media (orientation: portrait) {
+  .grid {
+    grid-template-rows: 1fr 1fr 1.27fr 1.02fr 0.84fr 0.84fr 0.84fr; /* keep the verified portrait split */
+  }
   .weather {
     padding-top: 0;
     justify-content: flex-end; /* tall cell: today's block sinks down next to the forecast */
@@ -718,13 +767,36 @@ body {
   .wx-days {
     margin-top: 0; /* else it stays pinned to the very bottom, splitting the gap */
   }
-  /* quote cards: 6 columns don't fit a narrow screen - 3 columns x 4 rows */
+  /* quote cards. Landscape parity: the root font-size is min(100vw/64, 100vh/48), so
+     rotating the same panel to portrait makes rem 4/3 smaller (the binding term flips to
+     /64) - the digits visibly shrank. Multiply the landscape sizes by 4/3 to get back the
+     physical size of the landscape layout, and lay the 10 quotes out 4 columns x 3 rows:
+     3 rows of landscape-height cards fit the band, 4 rows never do (that is what clipped).
+     The vh terms are the ceiling for near-square portrait windows, where width-driven rem
+     still outruns the height-driven band; `.quote > *` has overflow:hidden, so an
+     uncapped track squeeze cuts the digit bottoms. Two declarations = the root font-size's
+     fallback pattern: Chrome 72 drops min(), keeps plain vh. */
   .qgrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.9rem 1.2rem;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(0, auto); /* rows size to content, space-between pins them */
+    align-content: space-between; /* first row at the top, last row at the band bottom */
+    gap: 1.3vh 1.2rem;
+    gap: min(1.3vh, 0.9rem) 1.2rem;
+  }
+  /* 10 = 4 + 4 + 2: the last pair sits adjacent in columns 1-2. Spreading them over
+     `span 2` each kept the block rectangular but left a void right of every label —
+     the cards read as "pulled apart", so they pack one after another instead. */
+  .qgrid .q-name {
+    font-size: 1.725vh;
+    font-size: min(1.725vh, 1.933rem); /* 1.45rem x 4/3 */
   }
   .qgrid .q-price {
-    font-size: 2.6rem;
+    font-size: 2.5vh;
+    font-size: min(2.5vh, 2.8rem); /* 2.1rem x 4/3 */
+  }
+  .qgrid .q-pct {
+    font-size: 1.33vh;
+    font-size: min(1.33vh, 1.493rem); /* 1.12rem x 4/3 */
   }
 }
 
@@ -750,7 +822,8 @@ body {
   }
   .cal-cell.cal-span,
   .cal-cell.cal-hol,
-  .cal-cell.cal-fomc {
+  .cal-cell.cal-fomc,
+  .cal-cell.cal-speech {
     box-shadow: none;
     outline: 0.08rem solid CanvasText;
   }

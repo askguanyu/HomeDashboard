@@ -53,13 +53,14 @@ const Month = memo(function Month({ year, month, today, holidayByDate, fedByDate
         const fed = fedByDate.get(key);
         const span = fedSpanDates.has(key);
         const fomc = fed?.some((e) => e.kind === 'fomc');
+        const speech = fed?.some((e) => e.kind === 'speech');
         const isToday = key === today;
         return (
           <td
             key={c}
             role="cell"
             aria-current={isToday ? 'date' : undefined}
-            className={['cal-cell', isToday ? 'today' : '', span ? 'cal-span' : '', fomc ? 'cal-fomc' : '', holiday ? 'cal-hol' : '']
+            className={['cal-cell', isToday ? 'today' : '', span ? 'cal-span' : '', speech ? 'cal-speech' : '', fomc ? 'cal-fomc' : '', holiday ? 'cal-hol' : '']
               .filter(Boolean)
               .join(' ')}
           >

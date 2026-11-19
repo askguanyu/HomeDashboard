@@ -2,39 +2,8 @@ import { usePoll } from '../hooks';
 import { uiLocale, type WeatherPayload } from '../api';
 import type { WidgetProps } from './types';
 
-const ICONS: Record<number, string> = {
-  0: '☀️',
-  1: '🌤️',
-  2: '⛅',
-  3: '☁️',
-  45: '🌫️',
-  48: '🌫️',
-  51: '🌦️',
-  53: '🌦️',
-  55: '🌦️',
-  56: '🌧️',
-  57: '🌧️',
-  61: '🌧️',
-  63: '🌧️',
-  65: '🌧️',
-  66: '🌧️',
-  67: '🌧️',
-  71: '🌨️',
-  73: '🌨️',
-  75: '❄️',
-  77: '🌨️',
-  80: '🌦️',
-  81: '🌧️',
-  82: '⛈️',
-  85: '🌨️',
-  86: '❄️',
-  95: '⛈️',
-  96: '⛈️',
-  99: '⛈️',
 };
 
-function icon(code: number): string {
-  return ICONS[code] ?? '🌡️';
 }
 
 const WIND_DIRS = ['北风', '东北风', '东风', '东南风', '南风', '西南风', '西风', '西北风'];
@@ -89,7 +58,6 @@ export function Weather({ widget, config }: WidgetProps) {
     <div className="weather">
       {data.stale || failing ? <div className="stale-badge" role="status">缓存数据</div> : null}
       <div className="wx-now">
-        <span className="wx-icon" aria-hidden="true">{icon(c.code)}</span>
         <div className="wx-temp">
           {c.temp}
           <span className="wx-unit">{deg}</span>
@@ -107,7 +75,6 @@ export function Weather({ widget, config }: WidgetProps) {
         {data.daily.slice(1).map((d) => (
           <div className="wx-day" key={d.date}>
             <div className="wx-dow">{weekday.format(new Date(`${d.date}T12:00:00`))}</div>
-            <div className="wx-dicon" aria-hidden="true">{icon(d.code)}</div>
             <div className="wx-dtemps">
               <b>{d.hi}</b>
               <span>{d.lo}</span>
