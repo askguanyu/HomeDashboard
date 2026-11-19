@@ -2,8 +2,39 @@ import { usePoll } from '../hooks';
 import { uiLocale, type WeatherPayload } from '../api';
 import type { WidgetProps } from './types';
 
+const ICONS: Record<number, string> = {
+  0: '☀️',
+  1: '🌤️',
+  2: '⛅',
+  3: '☁️',
+  45: '🌫️',
+  48: '🌫️',
+  51: '🌦️',
+  53: '🌦️',
+  55: '🌦️',
+  56: '🌧️',
+  57: '🌧️',
+  61: '🌧️',
+  63: '🌧️',
+  65: '🌧️',
+  66: '🌧️',
+  67: '🌧️',
+  71: '🌨️',
+  73: '🌨️',
+  75: '❄️',
+  77: '🌨️',
+  80: '🌦️',
+  81: '🌧️',
+  82: '⛈️',
+  85: '🌨️',
+  86: '❄️',
+  95: '⛈️',
+  96: '⛈️',
+  99: '⛈️',
 };
 
+function icon(code: number): string {
+  return ICONS[code] ?? '🌡️';
 }
 
 const WIND_DIRS = ['北风', '东北风', '东风', '东南风', '南风', '西南风', '西风', '西北风'];
@@ -58,23 +89,24 @@ export function Weather({ widget, config }: WidgetProps) {
     <div className="weather">
       {data.stale || failing ? <div className="stale-badge" role="status">缓存数据</div> : null}
       <div className="wx-now">
-        <div className="wx-temp">
-          {c.temp}
+        <span className="wx-icon" aria-hidden="true">{icon(c.code)}</span>
+        <div className="wx-temp">{c.temp}</div>
+        <div className="wx-side">
           <span className="wx-unit">{deg}</span>
+          <span className="wx-text">{c.text}</span>
         </div>
-        <div className="wx-meta">
-          <div className="wx-text">{c.text}</div>
-          <div className="wx-feels">
-            体感 {c.feels}{deg}
-            {today ? ` · 今天 ${today.lo}~${today.hi}${deg}` : ''}
-          </div>
-        </div>
+      </div>
+      {/* today's feels + range: own row under the big temp, above sunrise/sunset */}
+      <div className="wx-feels">
+        体感 {c.feels}{deg}
+        {today ? ` · 今天 ${today.lo}~${today.hi}${deg}` : ''}
       </div>
       <div className="wx-details">{detailLines.map((line) => <div key={line}>{line}</div>)}</div>
       <div className="wx-days">
         {data.daily.slice(1).map((d) => (
           <div className="wx-day" key={d.date}>
             <div className="wx-dow">{weekday.format(new Date(`${d.date}T12:00:00`))}</div>
+            <div className="wx-dicon" aria-hidden="true">{icon(d.code)}</div>
             <div className="wx-dtemps">
               <b>{d.hi}</b>
               <span>{d.lo}</span>
