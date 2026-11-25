@@ -13,8 +13,10 @@ const zip = process.argv.includes('--nozip') ? false : true;
 
 const log = (m) => console.log(`[release] ${m}`);
 
-// 1. clean + skeleton
-fs.rmSync(path.join(ROOT, 'release'), { recursive: true, force: true });
+// 1. clean + skeleton — this tool's staging tree only, never all of release/, so the
+// small package's zip (package-release.mjs -> release/HomeDashboard-small.zip) survives.
+// Both tools stage into release/HomeDashboard, so the folder always matches the last build.
+fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 
 // 2. bundle server with esbuild (from local node_modules)

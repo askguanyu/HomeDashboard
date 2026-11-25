@@ -71,6 +71,15 @@ One port (8787) serves both the static frontend and the aggregating API, so any 
 
 The kiosk browser never touches the internet directly: all external fetches (Bing, NASA, Open-Meteo, Yahoo, NWS, federalreserve.gov, bls.gov) go through the local server, which keeps disk caches under `data/`, so short network outages just show a "stale" badge with the last known data.
 
+### Portable package
+
+```bash
+npm run release             # release/HomeDashboard-portable.zip — ~33 MB, bundles runtime/node.exe
+npm run release:small       # release/HomeDashboard-small.zip — a few MB, needs Node.js ≥ 20 on the target
+```
+
+Both packages unpack to a folder named `HomeDashboard` and carry the bundled `server.mjs`, `web/dist`, the `start-*.bat` launchers and your config. `start.bat` uses `runtime\node.exe` when it exists and falls back to `node` on `PATH`, which is why the small build is complete apart from Node itself. The two tools share the staging folder `release/HomeDashboard` (it always matches the last build) but write separate zips, so neither build throws away the other package. Either one includes your personal `config/dashboard.json` and `data/` caches — copy it between your own machines, never upload it.
+
 ---
 
 # HomeDashboard（中文）
@@ -145,3 +154,12 @@ npm run build && npm start
 单端口（8787）同时提供静态页面与聚合 API，局域网内任意设备打开 `http://<本机>:8787` 即可。浏览器按 `F11` 全屏（或用 `--kiosk http://localhost:8787` 启动 Chrome/Edge）得到无边框信息屏。关闭系统的显示器休眠与睡眠；需要重启后自动恢复的话，把启动命令加入登录自启动（Windows：任务计划程序或 `startup` 文件夹快捷方式）。
 
 全屏浏览器不直接访问外网：所有外部请求（Bing、NASA、Open-Meteo、Yahoo、NWS、federalreserve.gov、bls.gov）都由本地服务端代理，磁盘缓存保存在 `data/` 下，短暂断网只会显示"陈旧"角标和最后一次成功数据。
+
+### 便携包
+
+```bash
+npm run release             # release/HomeDashboard-portable.zip，约 33 MB，自带 runtime\node.exe
+npm run release:small       # release/HomeDashboard-small.zip，几 MB，目标机需自装 Node.js ≥ 20
+```
+
+两种产物解压后都叫 `HomeDashboard` 目录，内容一致（打包好的 `server.mjs`、`web/dist`、启动脚本与配置）。`start.bat` 优先使用 `runtime\node.exe`，没有就回退到系统 PATH 里的 `node`，所以小包除了 Node 本身什么都不缺。两个脚本共用暂存目录 `release/HomeDashboard`（目录内容始终是最后一次打包的结果），但各写各的 zip，打其中一个不会删掉另一个包。包内含你的个人 `config/dashboard.json` 与 `data/` 缓存，只在自己设备间拷贝，不要上传。

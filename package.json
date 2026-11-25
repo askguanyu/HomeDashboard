@@ -14,7 +14,8 @@
     "build": "vite build web",
     "start": "tsx server/src/index.ts",
     "typecheck": "tsc -p server/tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit",
-    "release": "node scripts/make-release.mjs"
+    "release": "node scripts/make-release.mjs",
+    "release:small": "node scripts/package-release.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
