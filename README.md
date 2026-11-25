@@ -3,7 +3,7 @@
 Turn an idle monitor into a family information display. A local Node server aggregates all data sources; a fullscreen browser tab becomes a dashboard showing:
 
 - **Clock** — digital (12-hour with Chinese day-period or plain) and a minimal analog dial, always second-accurate in the browser's timezone
-- **Calendar** — two-month view, ISO week numbers, US federal holidays, Fed schedule (FOMC decision dates + official speeches, highlighted meeting windows)
+- **Calendar** — two-month view, ISO week numbers, US federal holidays, macro calendar (FOMC decision dates with highlighted meeting windows, market-moving Fed appearances, and principal US data releases: payrolls, CPI, PPI, ECI, JOLTS)
 - **Weather** — current conditions, details (sunrise/sunset, wind, humidity, pressure, visibility) and a multi-day forecast; Open-Meteo primary, NWS fallback, Chinese text
 - **Stocks** — US equities, index (^GSPC style) and crypto quotes from Yahoo Finance, as a fixed tape or a grid, green-up/red-up configurable
 - **Wallpaper** — Bing and NASA image libraries, hourly rotation or Bing daily, plus a generative starry-sky fallback
@@ -57,7 +57,7 @@ Widget types and their `options`:
 - `analog-clock` — `style` (`ring`), `secondsHand`
 - `weather` — `details` (`sunrise`/`wind`/`humidity`/`pressure`/`visibility`), `forecastDays` (default 5), `units` (`imperial`/`metric`)
 - `stocks` — `symbols` (`[{code, label?}]`, Yahoo codes, `^` prefix for indices, `label` overrides the display text, e.g. `BTC-USD` → `BTC`), `style` (`tape` = fixed quote rows, `quotesPerRow` per row (default 3), no scrolling / `grid` = `columnsPerRow`)
-- `calendar` — `months` (default 2), `weekNumbers`, `showHolidays`, `showFed` (FOMC/speech chips, on by default)
+- `calendar` — `months` (default 2), `weekNumbers`, `showHolidays`, `showFed` (FOMC + market-moving speech chips, on by default), `showData` (data release chips, on by default)
 
 ## Deployment
 
@@ -69,7 +69,7 @@ npm run build && npm start
 
 One port (8787) serves both the static frontend and the aggregating API, so any device on the LAN can open `http://<this-machine>:8787`. Press `F11` in the browser (or launch Chrome/Edge with `--kiosk http://localhost:8787`) for a chromeless fullscreen display. Disable display sleep/hibernate on the machine, and put the start command in your login autostart (Windows: Task Scheduler or a `startup` folder shortcut) if you want it to come back after a reboot.
 
-The kiosk browser never touches the internet directly: all external fetches (Bing, NASA, Open-Meteo, Yahoo, NWS) go through the local server, which keeps disk caches under `data/`, so short network outages just show a "stale" badge with the last known data.
+The kiosk browser never touches the internet directly: all external fetches (Bing, NASA, Open-Meteo, Yahoo, NWS, federalreserve.gov, bls.gov) go through the local server, which keeps disk caches under `data/`, so short network outages just show a "stale" badge with the last known data.
 
 ---
 
@@ -78,7 +78,7 @@ The kiosk browser never touches the internet directly: all external fetches (Bin
 把闲置显示器变成家庭信息屏。本地 Node 服务聚合所有数据源，全屏浏览器即一块 dashboard，显示：
 
 - **时钟** — 数字时钟（12 小时制 + 中文时段）与极简表盘，浏览器端逐秒走时
-- **日历** — 双月视图、ISO 周号、美国联邦假日、美联储日程（FOMC 决议 + 官员讲话，会议区间高亮）
+- **日历** — 双月视图、ISO 周号、美国联邦假日、宏观日历（FOMC 决议与会议区间高亮、影响市场的美联储官员露面、美国主要经济数据发布：非农、CPI、PPI、ECI、JOLTS）
 - **天气** — 实况、明细（日出日落/风/湿度/气压/能见度）与多日预报；Open-Meteo 主源、NWS 备源，中文文案
 - **行情** — Yahoo Finance 美股/指数（`^` 前缀）/加密货币，固定行情条或网格，红涨绿跌可配
 - **壁纸** — Bing 与 NASA 图库整点轮换或每日更新，内置生成式星空兜底
@@ -132,7 +132,7 @@ npm run dev      # server: tsx watch · web: vite (http://localhost:5173)
 - `analog-clock` — `style`（`ring`）、`secondsHand`
 - `weather` — `details`（`sunrise`/`wind`/`humidity`/`pressure`/`visibility`）、`forecastDays`（默认 5）、`units`（`imperial`/`metric`）
 - `stocks` — `symbols`（`[{code, label?}]`，Yahoo 代码，指数加 `^`，`label` 覆盖界面显示文字，如 `BTC-USD` 显示为 `BTC`）、`style`（`tape` 固定行情条，每行 `quotesPerRow`（默认 3）个品种、不滚动 / `grid` 网格配 `columnsPerRow`）
-- `calendar` — `months`（并排月数，默认 2）、`weekNumbers`、`showHolidays`、`showFed`（FOMC/讲话标签，默认开）
+- `calendar` — `months`（并排月数，默认 2）、`weekNumbers`、`showHolidays`、`showFed`（FOMC 与"影响市场的官员露面"标签，默认开）、`showData`（数据发布标签，默认开）
 
 ## 部署
 
@@ -144,4 +144,4 @@ npm run build && npm start
 
 单端口（8787）同时提供静态页面与聚合 API，局域网内任意设备打开 `http://<本机>:8787` 即可。浏览器按 `F11` 全屏（或用 `--kiosk http://localhost:8787` 启动 Chrome/Edge）得到无边框信息屏。关闭系统的显示器休眠与睡眠；需要重启后自动恢复的话，把启动命令加入登录自启动（Windows：任务计划程序或 `startup` 文件夹快捷方式）。
 
-全屏浏览器不直接访问外网：所有外部请求（Bing、NASA、Open-Meteo、Yahoo、NWS）都由本地服务端代理，磁盘缓存保存在 `data/` 下，短暂断网只会显示"陈旧"角标和最后一次成功数据。
+全屏浏览器不直接访问外网：所有外部请求（Bing、NASA、Open-Meteo、Yahoo、NWS、federalreserve.gov、bls.gov）都由本地服务端代理，磁盘缓存保存在 `data/` 下，短暂断网只会显示"陈旧"角标和最后一次成功数据。

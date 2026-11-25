@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig, type DashboardConfig } from './config.js';
 import { getHolidays } from './sources/holidays.js';
-import { getFedEvents, startFedMaintenance } from './sources/fed.js';
+import { getMacroEvents, startMacroMaintenance } from './sources/macro.js';
 import { getCurrent, getBingCurrent, getMixedCurrent, getBackgroundFile } from './sources/background.js';
 import { getWeather } from './sources/weather.js';
 import { getQuotes } from './sources/quotes.js';
@@ -61,14 +61,14 @@ app.get('/api/holidays', (req, res) => {
   }
 });
 
-app.get('/api/fed', async (req, res) => {
+app.get('/api/macro', async (req, res) => {
   const year = Number(req.query.year ?? new Date().getFullYear());
   if (!Number.isInteger(year) || year < 1990 || year > 2100) {
     res.status(400).json({ error: 'bad year' });
     return;
   }
   try {
-    res.json(await getFedEvents(ROOT, year));
+    res.json(await getMacroEvents(ROOT, year));
   } catch (err) {
     res.status(503).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -215,7 +215,7 @@ app.use((req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`[homedashboard] http://localhost:${PORT}`);
-  startFedMaintenance(ROOT); // weekly background scrape; page loads read disk cache only
+  startMacroMaintenance(ROOT); // background scrapes (Fed speeches weekly, BLS monthly); page loads read disk cache only
   startSystemSampler(); // CPU delta window + nvidia-smi poll, off the request path
   const lan = Object.values(os.networkInterfaces())
     .flat()

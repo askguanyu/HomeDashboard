@@ -1,15 +1,15 @@
-import type { DashboardConfig, FedEvent, Holiday } from './api';
+import type { DashboardConfig, Holiday, MacroEvent } from './api';
 import { ComingSoon } from './widgets/Placeholder';
 import { ErrorBoundary } from './widgets/ErrorBoundary';
 import { resolveWidget, WIDGET_LABELS } from './widgets/registry';
 export function DashboardGrid({
   config,
   holidays,
-  fed,
+  macro,
 }: {
   config: DashboardConfig;
   holidays: Holiday[];
-  fed: FedEvent[];
+  macro: MacroEvent[];
 }) {
   return (
     <main className="grid">
@@ -28,7 +28,7 @@ export function DashboardGrid({
             <h2 className="visually-hidden">{WIDGET_LABELS[w.type] ?? w.type}</h2>
             <ErrorBoundary id={w.id}>
               {C ? (
-                <C widget={w} config={config} holidays={holidays} fed={fed} />
+                <C widget={w} config={config} holidays={holidays} macro={macro} />
               ) : (
                 <ComingSoon widget={w} />
               )}

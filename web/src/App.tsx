@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getJson, type DashboardConfig, type FedEvent, type FedResponse, type Holiday, type HolidaysResponse } from './api';
+import { getJson, type DashboardConfig, type Holiday, type HolidaysResponse, type MacroEvent, type MacroResponse } from './api';
 import { tzParts } from './time';
 import { Background } from './Background';
 import { DashboardGrid } from './DashboardGrid';
@@ -8,7 +8,7 @@ export default function App() {
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [fed, setFed] = useState<FedEvent[]>([]);
+  const [macro, setMacro] = useState<MacroEvent[]>([]);
 
   useEffect(() => {
     getJson<DashboardConfig>('/api/config').then(setConfig).catch((e) => setError(String(e)));
@@ -31,11 +31,11 @@ export default function App() {
         .then(([a, b]) => setHolidays([...a.holidays, ...b.holidays]))
         .catch(() => setHolidays([])); // calendar still renders without holiday labels
     Promise.all([
-      getJson<FedResponse>(`/api/fed?year=${year}`).catch(() => null),
-      getJson<FedResponse>(`/api/fed?year=${year + 1}`).catch(() => null),
+      getJson<MacroResponse>(`/api/macro?year=${year}`).catch(() => null),
+      getJson<MacroResponse>(`/api/macro?year=${year + 1}`).catch(() => null),
     ]).then(([a, b]) => {
       const events = [...(a?.events ?? []), ...(b?.events ?? [])];
-      if (events.length) setFed(events);
+      if (events.length) setMacro(events);
     });
   }, [config]);
 
@@ -45,7 +45,7 @@ export default function App() {
   return (
     <>
       <Background mode={config.theme?.background ?? 'starry'} image={config.theme?.backgroundImage ?? null} market={config.theme?.backgroundMarket ?? 'en-US'} />
-      <DashboardGrid config={config} holidays={holidays} fed={fed} />
+      <DashboardGrid config={config} holidays={holidays} macro={macro} />
     </>
   );
 }

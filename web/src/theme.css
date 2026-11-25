@@ -357,10 +357,11 @@ tbody .cal-weeknum {
 }
 
 /* Two fixed bands per day: digits in the flex band, the event chip in a 0.8rem band pinned to
-   the cell's bottom edge, so the bar doubles as the bottom of the .cal-speech/.cal-fomc/.cal-hol
+   the cell's bottom edge, so the bar doubles as the bottom of the .cal-speech/.cal-fomc/.cal-data/.cal-hol
    frame rather than floating inside it. Band heights ignore content, so every digit in a month
    shares one y and a chip can never sit on top of a digit (it used to, by up to 8.9px at
-   1920x1080). A second chip on the same day clips at the band's top edge, never on a digit. */
+   1920x1080). A day's events share ONE chip on one line (Calendar.tsx CHIP_ORDER), ellipsised
+   at the cell edge — two stacked chips overlapped inside the band instead. */
 .cal-cell {
   position: relative;
   display: grid;
@@ -404,8 +405,7 @@ tbody .cal-weeknum {
   pointer-events: none; /* kiosk: tooltips irrelevant, taps irrelevant */
 }
 
-.cal-holiday,
-.cal-fed {
+.cal-chip {
   font-size: 0.6rem;
   line-height: 1.12; /* keeps one chip inside the 0.8rem band (body leading 1.35 overflowed it) */
   border-radius: 0.15rem 0.15rem 0 0; /* square bottom corners: the bar is the frame's bottom */
@@ -416,20 +416,51 @@ tbody .cal-weeknum {
   text-shadow: none;
 }
 
-.cal-holiday {
+/* One chip colour per day, taken from its highest-ranked event (fomc > data >
+   speech > holiday), so "CPI 讲话·鲍曼" reads as a data day, not a speech day. */
+.cal-chip-holiday {
   color: #ffe9df;
   background: rgba(255, 122, 77, 0.42);
 }
 
-.cal-fed-fomc {
+.cal-chip-fomc {
   color: #241a02;
   background: #ffcf6e;
   font-weight: 600;
 }
 
-.cal-fed-speech {
+.cal-chip-speech {
   color: #dff3ff;
   background: rgba(60, 150, 220, 0.55);
+}
+
+/* One day's events sit side by side in the chip; a hairline between them keeps
+   "CPI 讲话·鲍曼" reading as two events, not one long label. currentColor follows
+   whatever ink the chip uses, so the rule stays visible on amber and violet alike. */
+.cal-seg + .cal-seg {
+  position: relative;
+  margin-left: 0.16rem;
+  padding-left: 0.18rem;
+}
+
+.cal-seg + .cal-seg::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.03rem;
+  bottom: 0.03rem;
+  width: 0.09rem; /* ~1.4px at the 16px baseline: visible from across the room, still hairline-thin */
+  border-radius: 0.05rem;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* Principal data releases (payrolls, CPI, ...) print at a fixed Eastern clock time and
+   move quotes within seconds, so they get their own hue and the same weight as FOMC. */
+.cal-chip-data {
+  color: #f4ecff;
+  background: rgba(122, 82, 205, 0.62);
+  font-weight: 600;
 }
 
 .cal-cell.cal-span {
@@ -446,6 +477,13 @@ tbody .cal-weeknum {
 .cal-cell.cal-fomc {
   background: rgba(255, 207, 110, 0.2);
   box-shadow: inset 0 0 0 0.06rem rgba(255, 207, 110, 0.35);
+  border-radius: 0.2rem;
+}
+
+/* Data release day: boxed in the data chip's violet */
+.cal-cell.cal-data {
+  background: rgba(122, 82, 205, 0.18);
+  box-shadow: inset 0 0 0 0.06rem rgba(160, 128, 232, 0.5);
   border-radius: 0.2rem;
 }
 
@@ -1043,8 +1081,7 @@ tbody .cal-weeknum {
   .bg-scrim {
     display: none; /* wallpaper never fights the system canvas */
   }
-  .cal-holiday,
-  .cal-fed {
+  .cal-chip {
     border: 0.06rem solid CanvasText;
     border-radius: 0;
     background: Canvas;
@@ -1052,6 +1089,7 @@ tbody .cal-weeknum {
   .cal-cell.cal-span,
   .cal-cell.cal-hol,
   .cal-cell.cal-fomc,
+  .cal-cell.cal-data,
   .cal-cell.cal-speech {
     box-shadow: none;
     outline: 0.08rem solid CanvasText;

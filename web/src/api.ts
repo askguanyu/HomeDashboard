@@ -39,18 +39,20 @@ export interface HolidaysResponse {
   holidays: Holiday[];
 }
 
-export interface FedEvent {
+/** Calendar macro layer: FOMC dates, market-moving Fed appearances ('speech'),
+ *  and principal US data releases ('data': payrolls, CPI, PPI, ECI, JOLTS). */
+export interface MacroEvent {
   date: string; // YYYY-MM-DD
-  kind: 'fomc' | 'speech';
+  kind: 'fomc' | 'speech' | 'data';
   label: string;
   title: string;
   who?: string;
   press?: boolean;
 }
 
-export interface FedResponse {
+export interface MacroResponse {
   year: number;
-  events: FedEvent[];
+  events: MacroEvent[];
 }
 
 export interface WeatherDay {

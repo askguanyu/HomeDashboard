@@ -1,10 +1,25 @@
 import { memo, useId, useMemo } from 'react';
 import { useNow } from '../hooks';
 import { tzParts, ymd } from '../time';
-import type { FedEvent, Holiday } from '../api';
+import type { Holiday, MacroEvent } from '../api';
 import type { WidgetProps } from './types';
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+
+/** One chip per day, all of that day's labels side by side (the band is one chip
+ *  tall, two chips overlap rather than stack). The chip wears the colour of the
+ *  first entry below and the cell takes that event's frame: a data print outranks
+ *  an official's appearance, and a holiday never wins the colour. Labels read in
+ *  this order so the ellipsis cuts the least important one first. */
+type ChipKind = MacroEvent['kind'] | 'holiday';
+const CHIP_ORDER: Record<ChipKind, number> = { fomc: 0, data: 1, speech: 2, holiday: 3 };
+const CHIP_FRAME: Record<ChipKind, string> = { fomc: 'cal-fomc', data: 'cal-data', speech: 'cal-speech', holiday: 'cal-hol' };
+
+interface Chip {
+  kind: ChipKind;
+  label: string;
+  title: string;
+}
 
 /** ISO-8601 week number (Monday-based, week 1 contains Jan 4). Screenshot uses these. */
 function isoWeek(y: number, m: number, d: number): number {
@@ -19,12 +34,12 @@ interface MonthProps {
   month: number; // 1-12
   today: string;
   holidayByDate: Map<string, string>;
-  fedByDate: Map<string, FedEvent[]>;
-  fedSpanDates: Set<string>;
+  macroByDate: Map<string, MacroEvent[]>;
+  fomcSpanDates: Set<string>;
   weekNumbers: boolean;
 }
 
-const Month = memo(function Month({ year, month, today, holidayByDate, fedByDate, fedSpanDates, weekNumbers }: MonthProps) {
+const Month = memo(function Month({ year, month, today, holidayByDate, macroByDate, fomcSpanDates, weekNumbers }: MonthProps) {
   const titleId = useId();
   const firstWeekday = new Date(year, month - 1, 1).getDay(); // 0=Sun
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -50,31 +65,37 @@ const Month = memo(function Month({ year, month, today, holidayByDate, fedByDate
         }
         const key = ymd(year, month, dnum);
         const holiday = holidayByDate.get(key);
-        const fed = fedByDate.get(key);
-        const span = fedSpanDates.has(key);
-        const fomc = fed?.some((e) => e.kind === 'fomc');
-        const speech = fed?.some((e) => e.kind === 'speech');
+        const evs = macroByDate.get(key);
+        const span = fomcSpanDates.has(key);
         const isToday = key === today;
+        const chips: Chip[] = [...(evs ?? []), ...(holiday ? [{ kind: 'holiday' as const, label: holiday, title: holiday }] : [])].sort(
+          (a, b) => CHIP_ORDER[a.kind] - CHIP_ORDER[b.kind],
+        );
         return (
           <td
             key={c}
             role="cell"
             aria-current={isToday ? 'date' : undefined}
-            className={['cal-cell', isToday ? 'today' : '', span ? 'cal-span' : '', speech ? 'cal-speech' : '', fomc ? 'cal-fomc' : '', holiday ? 'cal-hol' : '']
-              .filter(Boolean)
-              .join(' ')}
+            className={
+              ['cal-cell', isToday ? 'today' : '', span ? 'cal-span' : '', chips.length ? CHIP_FRAME[chips[0].kind] : '']
+                .filter(Boolean)
+                .join(' ')
+            }
           >
             <span className="cal-day">{dnum}</span>
-            {(holiday || fed) && (
+            {chips.length > 0 && (
               <span className="cal-chips">
-                {holiday && <span className="cal-holiday">{holiday}</span>}
-                {fed?.slice(0, 2).map((e, i) => (
-                  <span key={i} className={`cal-fed cal-fed-${e.kind}`} title={e.title}>
-                    {e.label}
-                    {/* title tooltips never reach keyboard or screen-reader users: repeat the text inline */}
-                    <span className="visually-hidden">：{e.title}</span>
-                  </span>
-                ))}
+                <span className={`cal-chip cal-chip-${chips[0].kind}`} title={chips.map((e) => e.title).join('\n')}>
+                  {chips
+                    .slice(0, 2)
+                    .map((e, i) => (
+                      <span key={i} className="cal-seg">
+                        {e.label}
+                      </span>
+                    ))}
+                  {/* title tooltips never reach keyboard or screen-reader users: repeat the text inline */}
+                  <span className="visually-hidden">：{chips.map((e) => e.title).join('；')}</span>
+                </span>
               </span>
             )}
           </td>
@@ -114,7 +135,7 @@ const Month = memo(function Month({ year, month, today, holidayByDate, fedByDate
 });
 
 /** Two months stacked vertically (current + next), like the screenshot's right column. */
-export function Calendar({ config, holidays, fed, widget }: WidgetProps) {
+export function Calendar({ config, holidays, macro, widget }: WidgetProps) {
   // Day-level widget: tick per minute instead of per second (useNow default) so the
   // 100-odd table cells stay memoised; Month re-renders only when `today` rolls over.
   const t = tzParts(useNow(60_000), config.timezone);
@@ -123,8 +144,9 @@ export function Calendar({ config, holidays, fed, widget }: WidgetProps) {
   const weekNumbers = widget.options?.weekNumbers !== false;
   const showHolidays = widget.options?.showHolidays !== false;
   const showFed = widget.options?.showFed !== false;
+  const showData = widget.options?.showData !== false;
 
-  const { holidayByDate, fedByDate, fedSpanDates } = useMemo(() => {
+  const { holidayByDate, macroByDate, fomcSpanDates } = useMemo(() => {
     const holidayByDate = new Map<string, string>();
     if (showHolidays) {
       for (const h of holidays) {
@@ -132,23 +154,24 @@ export function Calendar({ config, holidays, fed, widget }: WidgetProps) {
       }
     }
 
-    const fedByDate = new Map<string, FedEvent[]>();
-    const fedSpanDates = new Set<string>();
-    if (showFed) {
-      for (const e of fed) {
-        const arr = fedByDate.get(e.date) ?? [];
+    const macroByDate = new Map<string, MacroEvent[]>();
+    const fomcSpanDates = new Set<string>();
+    const shown = macro.filter((e) => (e.kind === 'data' ? showData : showFed));
+    if (shown.length) {
+      for (const e of shown) {
+        const arr = macroByDate.get(e.date) ?? [];
         arr.push(e);
-        fedByDate.set(e.date, arr);
+        macroByDate.set(e.date, arr);
       }
-      for (const v of fedByDate.values()) v.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'fomc' ? -1 : 1));
-      for (const e of fed.filter((x) => x.kind === 'fomc')) {
+      for (const v of macroByDate.values()) v.sort((a, b) => CHIP_ORDER[a.kind] - CHIP_ORDER[b.kind]);
+      for (const e of macro.filter((x) => x.kind === 'fomc')) {
         const start = e.title.match(/meeting (\d{4}-\d\d-\d\d)/);
         if (!start) continue;
-        for (const d of dayRange(start[1], e.date)) fedSpanDates.add(d);
+        for (const d of dayRange(start[1], e.date)) fomcSpanDates.add(d);
       }
     }
-    return { holidayByDate, fedByDate, fedSpanDates };
-  }, [holidays, fed, showHolidays, showFed]);
+    return { holidayByDate, macroByDate, fomcSpanDates };
+  }, [holidays, macro, showHolidays, showFed, showData]);
 
   const list = [];
   for (let i = 0; i < months; i++) {
@@ -161,8 +184,8 @@ export function Calendar({ config, holidays, fed, widget }: WidgetProps) {
         today={today}
         weekNumbers={weekNumbers}
         holidayByDate={holidayByDate}
-        fedByDate={fedByDate}
-        fedSpanDates={fedSpanDates}
+        macroByDate={macroByDate}
+        fomcSpanDates={fomcSpanDates}
       />,
     );
   }

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { decodeEntities } from './html.js';
 
 /**
  * US federal reserve calendar for the calendar widget (free, no key):
@@ -21,6 +22,7 @@ export interface FedEvent {
   title: string; // english title / description (tooltip)
   who?: string; // speech: official slug (powell, waller, ...)
   press?: boolean; // fomc: press conference same day
+  testimony?: boolean; // speech: congressional testimony, not a speech
 }
 
 interface FomcMeeting {
@@ -48,6 +50,9 @@ const WHO_CN: Record<string, string> = {
   waller: '沃勒',
   jefferson: '杰斐逊',
   cook: '库克',
+  kugler: '库格勒',
+  miran: '米兰',
+  warsh: '沃什',
   barr: '巴尔',
   dalbosco: '达尔博斯科',
   goldstein: '戈德斯坦',
@@ -60,17 +65,6 @@ const WHO_CN: Record<string, string> = {
   mester: '梅斯特',
   evans: '埃文斯',
 
-}
-
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d))
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#8217;|&rsquo;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .trim();
 }
 
 let schedule: Record<string, FomcMeeting[]> | null = null;
@@ -133,6 +127,7 @@ async function scrapeSpeeches(year: number): Promise<FedEvent[]> {
       label: `讲话·${WHO_CN[who] ?? who}`,
       title: `${m[1].includes('testimony') ? 'Testimony' : 'Speech'}: ${title}`,
       who,
+      testimony: m[1].includes('testimony'),
     });
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
