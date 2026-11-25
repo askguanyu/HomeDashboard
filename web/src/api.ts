@@ -101,6 +101,18 @@ export interface QuotesResponse {
   quotes: Quote[];
 }
 
+export interface SystemPayload {
+  cpuPct: number | null;
+  gpuPct: number | null;
+  combinedPct: number | null;
+  gpuName: string | null;
+  gpuSupported: boolean;
+  sampledAt: number | null;
+  stale: boolean;
+  /** combined % per sample, oldest first (10 min of trend) */
+  history: number[];
+}
+
 export async function getJson<T>(url: string): Promise<T> {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`);

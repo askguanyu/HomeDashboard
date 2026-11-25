@@ -49,12 +49,18 @@
     {
       "id": "weather",
       "type": "weather",
-      "area": { "col": [1, 7], "row": [5, 8] },
+      "area": { "col": [1, 5], "row": [5, 8] },
       "options": {
         "details": ["sunrise", "wind", "humidity", "pressure", "visibility"],
         "forecastDays": 5,
         "units": "metric"
       }
+    },
+    {
+      "id": "system",
+      "type": "system-load",
+      "area": { "col": [5, 7], "row": [5, 8] },
+      "options": { "refreshSec": 5 }
     },
     {
       "id": "calendar",

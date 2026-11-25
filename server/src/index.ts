@@ -9,6 +9,7 @@ import { getFedEvents, startFedMaintenance } from './sources/fed.js';
 import { getCurrent, getBingCurrent, getMixedCurrent, getBackgroundFile } from './sources/background.js';
 import { getWeather } from './sources/weather.js';
 import { getQuotes } from './sources/quotes.js';
+import { getSystemDebug, getSystemLoad, startSystemSampler } from './sources/system.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.HD_ROOT ? path.resolve(process.env.HD_ROOT) : path.resolve(dirname, '../..');
@@ -144,6 +145,15 @@ app.get('/api/quotes', async (req, res) => {
   }
 });
 
+app.get('/api/system', (_req, res) => {
+  res.json(getSystemLoad());
+});
+
+/** GPU readings and the sampler's own health, for debugging the load widget over curl. */
+app.get('/api/system/debug', (_req, res) => {
+  res.json({ ...getSystemLoad(), ...getSystemDebug(), cores: os.cpus().length, uptimeSec: Math.round(os.uptime()) });
+});
+
 const dist = path.join(ROOT, 'web', 'dist');
 
 /**
@@ -206,6 +216,7 @@ app.use((req, res, next) => {
 app.listen(PORT, () => {
   console.log(`[homedashboard] http://localhost:${PORT}`);
   startFedMaintenance(ROOT); // weekly background scrape; page loads read disk cache only
+  startSystemSampler(); // CPU delta window + nvidia-smi poll, off the request path
   const lan = Object.values(os.networkInterfaces())
     .flat()
     .filter((i): i is os.NetworkInterfaceInfo => !!i && i.family === 'IPv4' && !i.internal)
