@@ -268,17 +268,21 @@ body {
 }
 
 .clock-holiday {
-  /* Out of the flex flow: on short cells (4:3, e.g. 1024x768) a flow-placed
-     holiday squeezes the 日期 line box, and the date glyphs (line-height 1.06 <
-     ink height) bleed into it. Absolute keeps the clock/weekday/date pixels
-     identical everywhere; `top` lands the ink just under the date's ink bottom.
-     Derivation from .clock's padding-top: 0.1 + 8.6 (clock-hm) + 0.2 (gap) =
-     8.9; the date's baseline sits (line-height + ascent - descent) / 2 =
-     (5.91 + 6.0 - 1.38) / 2 = 5.27rem lower, + 0.75 CJK ink descent = 14.92;
-     +0.18 clearance -> 15.1rem. Segoe UI / Microsoft YaHei metrics. */
+  /* Two guarantees, whichever leaves room:
+     - never over 日期: 15.1rem is just under the date's ink bottom (0.1 + 8.6 digits
+       + 0.2 gap = 8.9, then the baseline sits (line-height + ascent - descent)/2 =
+       (5.91 + 6.0 - 1.38)/2 = 5.27 lower, + 0.75 CJK ink descent = 14.92, + 0.18).
+       Both the ink and this `top` are rem, so that clearance is scale-invariant.
+     - never over the weather: `100%` is the band's own bottom edge, and the corridor
+       under it (grid gap 0.3rem + the weather cell's padding-top 1.1rem) is empty.
+     min() picks the date-hugging spot when the band is >= 15.1rem tall (16:9, portrait,
+     tall windows) and the corridor when the band is shorter - on 4:3 the band is 15.03rem
+     at 100% text but only 12.4rem at +20% (it is vh-driven while every glyph is rem), and
+     a bare 15.1rem then fell ~50px deep onto the wx icon: the Chromebook report.
+     Label bottom is max(16.1rem, 100% + 1.12rem) <= band bottom + 1.4rem either way. */
   position: absolute;
   left: 0.15rem;
-  top: 15.1rem;
+  top: min(15.1rem, calc(100% + 0.12rem));
   font-size: 1rem;
   line-height: 1;
   color: #ffd97a;
