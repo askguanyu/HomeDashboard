@@ -203,7 +203,16 @@ body {
 
 /* ============ digital clock ============ */
 .clock {
+  /* The holiday label anchors here, so the box must hug 日期's own bottom edge rather
+     than the cell's: fit-content + max-height:100% makes the box min(content, band) -
+     the date's box bottom while the band has room, the band's bottom once text scaling
+     squeezes it. justify-content:flex-start means a shorter container moves nothing, so
+     the clock/weekday/date pixels stay identical (measured at 9 viewport x scale pairs).
+     height:100% first is the §6.4 two-declaration idiom: an engine that drops
+     fit-content keeps 100% and the label then lands in the corridor, never on a glyph. */
   height: 100%;
+  height: fit-content;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -268,21 +277,22 @@ body {
 }
 
 .clock-holiday {
-  /* Two guarantees, whichever leaves room:
-     - never over 日期: 15.1rem is just under the date's ink bottom (0.1 + 8.6 digits
-       + 0.2 gap = 8.9, then the baseline sits (line-height + ascent - descent)/2 =
-       (5.91 + 6.0 - 1.38)/2 = 5.27 lower, + 0.75 CJK ink descent = 14.92, + 0.18).
-       Both the ink and this `top` are rem, so that clearance is scale-invariant.
-     - never over the weather: `100%` is the band's own bottom edge, and the corridor
-       under it (grid gap 0.3rem + the weather cell's padding-top 1.1rem) is empty.
-     min() picks the date-hugging spot when the band is >= 15.1rem tall (16:9, portrait,
-     tall windows) and the corridor when the band is shorter - on 4:3 the band is 15.03rem
-     at 100% text but only 12.4rem at +20% (it is vh-driven while every glyph is rem), and
-     a bare 15.1rem then fell ~50px deep onto the wx icon: the Chromebook report.
-     Label bottom is max(16.1rem, 100% + 1.12rem) <= band bottom + 1.4rem either way. */
+  /* No min() here: the Chromebook runs Chrome 72 (DESIGN.md §6.4), which drops the whole
+     `top: min(...)` declaration (min() is Chrome 79+). An absolutely positioned child of a
+     flex container with `top: auto` falls back to its static position = the container's
+     content-box start, so the label painted over 11:36 - that was the report.
+     `100%` is .clock's own bottom edge = min(日期's box, the band), so the label always
+     rides right under the date: +0.29rem is the accepted clearance (467.3 -> 471.9 at
+     1024x768; the rem-derived ink bottom 14.92 vs 14.81 content + 0.18 clearance agrees).
+     When text scaling squeezes the band (4:3: 15.03rem at 100% text, 12.4rem at +20%,
+     because the band is vh-driven while glyphs are rem) that edge becomes the band's own
+     bottom, i.e. the corridor under the cell - grid gap 0.3rem plus the weather cell's
+     padding-top 1.1rem - and the label bottom, 100% + 1.29rem, stays inside it. Portrait
+     zeroes the weather's padding-top but also pushes its ink to the cell bottom
+     (.weather{justify-content:flex-end}), so the corridor is far wider there. */
   position: absolute;
   left: 0.15rem;
-  top: min(15.1rem, calc(100% + 0.12rem));
+  top: calc(100% + 0.29rem);
   font-size: 1rem;
   line-height: 1;
   color: #ffd97a;
@@ -1024,6 +1034,12 @@ tbody .cal-weeknum {
 /* ============ Chrome < 84: flex `gap` unsupported, simulate via margins ============ */
 .no-flexgap .clock > * + * {
   margin-top: 0.2rem;
+}
+.no-flexgap .clock > * + .clock-holiday {
+  /* The holiday label is absolutely positioned, so the fake gap must not spend corridor on
+     it: Chrome 72 would land it 0.2rem (3.4px at root 16.9) deeper and clip the weather
+     icon's top edge. Equal specificity to the rule above, later in the sheet, so it wins. */
+  margin-top: 0;
 }
 .no-flexgap .clock-main > * + * {
   margin-left: 0.35rem;
