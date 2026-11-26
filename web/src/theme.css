@@ -210,6 +210,7 @@ body {
   align-items: flex-start;
   padding: 0.1rem 0 0 0.15rem;
   gap: 0.2rem;
+  position: relative; /* holiday anchor */
 }
 
 .clock-main {
@@ -267,7 +268,19 @@ body {
 }
 
 .clock-holiday {
+  /* Out of the flex flow: on short cells (4:3, e.g. 1024x768) a flow-placed
+     holiday squeezes the 日期 line box, and the date glyphs (line-height 1.06 <
+     ink height) bleed into it. Absolute keeps the clock/weekday/date pixels
+     identical everywhere; `top` lands the ink just under the date's ink bottom.
+     Derivation from .clock's padding-top: 0.1 + 8.6 (clock-hm) + 0.2 (gap) =
+     8.9; the date's baseline sits (line-height + ascent - descent) / 2 =
+     (5.91 + 6.0 - 1.38) / 2 = 5.27rem lower, + 0.75 CJK ink descent = 14.92;
+     +0.18 clearance -> 15.1rem. Segoe UI / Microsoft YaHei metrics. */
+  position: absolute;
+  left: 0.15rem;
+  top: 15.1rem;
   font-size: 1rem;
+  line-height: 1;
   color: #ffd97a;
 }
 
