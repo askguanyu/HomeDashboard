@@ -373,19 +373,65 @@ tbody .cal-weeknum {
 
 .cal-day {
   align-self: center;
-  font-size: 1.25rem; /* max size whose two-digit ink still sits inside a true circle in the band */
+  /* Size follows the ROW budget, not rem. The today disc is fitted to the band, and it can
+     only cover the day's ink if the digit stays under ~0.79 × band (two digits' half-diagonal
+     is ~0.63em). rem cannot promise that: on Chrome 72 the root size loses `min()` (79+) and
+     falls back to `calc(2.2vmin)` = 100vh/45.5 — 5.6% bigger than the modern 100vh/48 — while
+     the band is vh-driven and unchanged, so the designed 1.68rem disc overshoots the band
+     there. That single 5.6% is both symptoms the Chromebook showed at default scaling: the
+     slightly cut disc, and a disc too small to reach the corners of "25".
+     Two declarations (the root-size idiom, §6.4): Chrome 72 keeps the first — ~7% under the
+     design size, i.e. the 5.6% overshoot plus a hair — and modern browsers take the min()
+     form, which equals 1.25rem exactly (1.25 × 100vh/48 = 100vh/38.4 when height-bound, and
+     1.25rem stays the winner when width-bound), so nothing changes there to the pixel. */
+  font-size: calc(100vh / 41);
+  font-size: min(1.25rem, calc(100vh / 38.4));
   font-weight: 300;
   line-height: 1;
 }
 
-.cal-cell.today .cal-day {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.68rem; /* perfect circle: side is rem, not em, so it does not track the digit size */
-  height: 1.68rem; /* Chrome 72 has no aspect-ratio -> fixed square (square + 50% radius = circle) */
-  border-radius: 50%;
+/* Today badge — a circle fitted to the digit band, drawn as a masked box.
+
+   Why this shape: the band's height comes from the viewport while rem grows with
+   browser/OS text scaling, so the old fixed `width/height: 1.68rem` square outgrew the
+   band and the cell's overflow:hidden cut its top (at root 26px: band 10.97px vs a
+   43.68px box, 16.35px painted above the cell). Every alternative that measures the band
+   failed on the Chrome 72 Chromebook: `height: 100%` does NOT resolve there (the <td>'s
+   grid row is indefinite, so the box fell back to the rem cap and clipped again), an
+   absolutely positioned <svg> ignores `right` (a replaced element: the disc parked on the
+   cell's left edge, 17.48px off-centre), and a radial-gradient disc stair-steps because
+   gradient stops are interpolated per pixel, not per coverage.
+
+   Offsets on a NON-replaced pseudo-element need no percentage at all and stretch exactly
+   over the band; the SVG mask, scaled with `contain`, keeps the 1:1 ratio so the result is
+   a true circle of min(band, cell width), rasterised with anti-aliasing, centred on the
+   digit (which is `position: relative`, so it paints later and stays on top), and it
+   cannot leave the cell at any text scale. White fill because a mask is engine-dependent
+   on alpha vs luminance; white is correct for both. The mask URL is duplicated for the
+   unprefixed property — Chrome 72 only knows `-webkit-mask`. */
+.cal-cell.today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0.8rem; /* the chip band is the cell's second row */
+  left: 0;
   background: var(--today);
+  /* longhands, not the `mask` shorthand: esbuild (Vite's CSS minifier) drops the whole rule
+     when it meets `mask: url(...) center / contain`, and the -webkit- longhands are what
+     Chrome 72 actually implements */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48.5' fill='%23fff'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48.5' fill='%23fff'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.cal-cell.today .cal-day {
+  position: relative; /* positioned, and after ::before in tree order, so the digit paints above the disc */
   color: #fff;
   font-weight: 500;
   text-shadow: none;
@@ -1093,6 +1139,9 @@ tbody .cal-weeknum {
   .cal-cell.cal-speech {
     box-shadow: none;
     outline: 0.08rem solid CanvasText;
+  }
+  .cal-cell.today::before {
+    display: none; /* the system palette owns the accent; the outline below marks today */
   }
   .cal-cell.today .cal-day {
     background: Canvas;
