@@ -183,7 +183,10 @@ log(`package size: ${(du(OUT) / 1048576).toFixed(1)} MB (no runtime)`);
 if (zip) {
   const zipPath = path.join(ROOT, 'release', 'HomeDashboard-small.zip');
   fs.rmSync(zipPath, { force: true }); // never build on top of a stale archive
-  execSync(`tar -a -c -f "${zipPath}" -C "${path.join(ROOT, 'release')}" HomeDashboard`, { stdio: 'inherit' });
+  // Pin Windows' bsdtar: under a Git Bash PATH, bare `tar` is GNU tar and reads
+  // "D:\..." as host:path ("Cannot connect to D: resolve failed", exit 128).
+  const bsdtar = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe');
+  execSync(`"${bsdtar}" -a -c -f "${zipPath}" -C "${path.join(ROOT, 'release')}" HomeDashboard`, { stdio: 'inherit' });
   log(`zipped: ${zipPath} (${(fs.statSync(zipPath).size / 1048576).toFixed(1)} MB)`);
 }
 log('done');
