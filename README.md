@@ -6,7 +6,7 @@ Turn an idle monitor into a family information display. A local Node server aggr
 - **Calendar** — two-month view, ISO week numbers, US federal holidays, macro calendar (FOMC decision dates with highlighted meeting windows, market-moving Fed appearances, and principal US data releases: payrolls, CPI, PPI, ECI, JOLTS)
 - **Weather** — current conditions, details (sunrise/sunset, wind, humidity, pressure, visibility) and a multi-day forecast; Open-Meteo primary, NWS fallback, Chinese text
 - **Stocks** — US equities, index (^GSPC style) and crypto quotes from Yahoo Finance, as a fixed tape or a grid, green-up/red-up configurable
-- **Wallpaper** — Bing and NASA image libraries, hourly rotation or Bing daily, plus a generative starry-sky fallback
+- **Wallpaper** — five keyless libraries (NASA ~6k, Bing with a 2.9k-day archive, Wallhaven, Wikimedia Commons, ESO) merged into one hourly-rotating pool that never repeats inside ~20 days, plus a generative starry-sky fallback
 
 All sources are free and need no API key. Everything runs on one machine; responses are disk-cached so the display degrades gracefully (stale badges) instead of breaking when the network drops.
 
@@ -44,7 +44,7 @@ Layout and content live entirely in `config/dashboard.json`. The server hot-relo
 | Key | Meaning |
 |-----|---------|
 | `timezone` / `locale` | Clock/date timezone (e.g. `America/New_York`) and text locale (`zh-CN`) |
-| `theme.background` | `mix` (hourly random pick: first choose a library between Bing / NASA with equal odds, then a random image inside it; one library being offline doesn't stop rotation) · `bing-daily` (today's Bing image, switches at midnight) · `bing-rotate` (hourly over the latest 8 days) · `nasa-rotate` (hourly over the NASA library) · `starry` (built-in generative sky) |
+| `theme.background` | `mix` (hourly rotation over the merged pool of all five libraries — NASA, Bing incl. ~16 years of history, Wallhaven, Wikimedia Commons, ESO — sized-proportional, no image repeats within ~20 days; a library being offline doesn't stop rotation) · `bing-daily` (today's Bing image, switches at midnight) · `bing-rotate` (hourly over the whole Bing archive, ~2.9k images) · `nasa-rotate` (hourly over the NASA library) · `starry` (built-in generative sky) |
 | `theme.backgroundMarket` | Bing market, default `en-US` (`zh-CN` for the Chinese feed) |
 | `theme.backgroundImage` | Path/URL of a custom image; overrides every mode above |
 | `theme.changeColors` | `green-up` (default) or `red-up` (Chinese convention) |
@@ -69,7 +69,7 @@ npm run build && npm start
 
 One port (8787) serves both the static frontend and the aggregating API, so any device on the LAN can open `http://<this-machine>:8787`. Press `F11` in the browser (or launch Chrome/Edge with `--kiosk http://localhost:8787`) for a chromeless fullscreen display. Disable display sleep/hibernate on the machine, and put the start command in your login autostart (Windows: Task Scheduler or a `startup` folder shortcut) if you want it to come back after a reboot.
 
-The kiosk browser never touches the internet directly: all external fetches (Bing, NASA, Open-Meteo, Yahoo, NWS, federalreserve.gov, bls.gov) go through the local server, which keeps disk caches under `data/`, so short network outages just show a "stale" badge with the last known data.
+The kiosk browser never touches the internet directly: all external fetches (Bing, NASA, Wallhaven, Wikimedia Commons, ESO, Open-Meteo, Yahoo, NWS, federalreserve.gov, bls.gov) go through the local server, which keeps disk caches under `data/`, so short network outages just show a "stale" badge with the last known data.
 
 ### Portable package
 
@@ -90,7 +90,7 @@ Both packages unpack to a folder named `HomeDashboard` and carry the bundled `se
 - **日历** — 双月视图、ISO 周号、美国联邦假日、宏观日历（FOMC 决议与会议区间高亮、影响市场的美联储官员露面、美国主要经济数据发布：非农、CPI、PPI、ECI、JOLTS）
 - **天气** — 实况、明细（日出日落/风/湿度/气压/能见度）与多日预报；Open-Meteo 主源、NWS 备源，中文文案
 - **行情** — Yahoo Finance 美股/指数（`^` 前缀）/加密货币，固定行情条或网格，红涨绿跌可配
-- **壁纸** — Bing 与 NASA 图库整点轮换或每日更新，内置生成式星空兜底
+- **壁纸** — NASA、Bing（含约 16 年历史存档）、Wallhaven、维基共享资源、ESO 五个免 key 图库合并成一个整点轮换大池,约 20 天内不重样,内置生成式星空兜底
 
 所有数据源免费、无需 API key。单机运行，响应带磁盘缓存，断网时显示"陈旧"角标和最后一次成功数据，而不是白屏。
 
@@ -128,7 +128,7 @@ npm run dev      # server: tsx watch · web: vite (http://localhost:5173)
 | 配置项 | 说明 |
 |--------|------|
 | `timezone` / `locale` | 走时与日期文案的时区（如 `America/New_York`）与语言（`zh-CN`） |
-| `theme.background` | `mix`（每小时随机换一张：先在 Bing / NASA 两个图库间等概率选库、再库内随机选图，单个图库断网不影响轮换）/ `bing-daily`（Bing 每日一图，午夜随 Bing 换图）/ `bing-rotate`（最近 8 天每小时轮换）/ `nasa-rotate`（NASA 图像库每小时自动换图）/ `starry`（内置生成式星空） |
+| `theme.background` | `mix`（每小时从五个图库——NASA、Bing（含约 16 年历史）、Wallhaven、维基共享、ESO——的合并池里换一张,按池大小加权、约 20 天内不重样;单个图库断网不影响轮换）/ `bing-daily`（Bing 每日一图，午夜随 Bing 换图）/ `bing-rotate`（Bing 历史全池约 2900 张每小时轮换）/ `nasa-rotate`（NASA 图像库每小时自动换图）/ `starry`（内置生成式星空） |
 | `theme.backgroundMarket` | Bing 市场，默认 `en-US`（`zh-CN` 换中文版图源） |
 | `theme.backgroundImage` | 指定本地图片，覆盖以上全部模式 |
 | `theme.changeColors` | `green-up`（默认）/ `red-up`（中式红涨绿跌） |
@@ -153,7 +153,7 @@ npm run build && npm start
 
 单端口（8787）同时提供静态页面与聚合 API，局域网内任意设备打开 `http://<本机>:8787` 即可。浏览器按 `F11` 全屏（或用 `--kiosk http://localhost:8787` 启动 Chrome/Edge）得到无边框信息屏。关闭系统的显示器休眠与睡眠；需要重启后自动恢复的话，把启动命令加入登录自启动（Windows：任务计划程序或 `startup` 文件夹快捷方式）。
 
-全屏浏览器不直接访问外网：所有外部请求（Bing、NASA、Open-Meteo、Yahoo、NWS、federalreserve.gov、bls.gov）都由本地服务端代理，磁盘缓存保存在 `data/` 下，短暂断网只会显示"陈旧"角标和最后一次成功数据。
+全屏浏览器不直接访问外网：所有外部请求（Bing、NASA、Wallhaven、维基共享资源、ESO、Open-Meteo、Yahoo、NWS、federalreserve.gov、bls.gov）都由本地服务端代理，磁盘缓存保存在 `data/` 下，短暂断网只会显示"陈旧"角标和最后一次成功数据。
 
 ### 便携包
 

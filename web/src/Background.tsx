@@ -41,6 +41,7 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
   const [layers, setLayers] = useState<Array<{ url: string; info: BgInfo; visible: boolean }>>([]);
   const [failed, setFailed] = useState(false);
   const keyRef = useRef<number | null>(null);
+  const idRef = useRef<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -49,7 +50,9 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         const r = await fetch(`/api/background?mode=${encodeURIComponent(mode)}&market=${encodeURIComponent(market)}`);
         if (!r.ok) throw new Error(String(r.status));
         const info = (await r.json()) as BgInfo;
-        if (!alive || keyRef.current === info.key) return;
+        // The id matters as much as the hour key: when a download fails the server marks the
+        // image bad and re-picks within the same hour, so the client must follow that switch.
+        if (!alive || (keyRef.current === info.key && idRef.current === info.item.id)) return;
         const probe = new Image();
         // The hour key keeps every rotation a distinct URL: older Chromium (the stick PC's
         // pinned Chrome) can answer a repeat URL straight from its image cache without
@@ -61,6 +64,7 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
         probe.onload = () => {
           if (!alive) return;
           keyRef.current = info.key;
+          idRef.current = info.item.id;
           setFailed(false);
           setLayers((prev) =>
             [{ url, info, visible: true }, ...prev.map((l) => ({ ...l, visible: false }))].slice(0, 2),
@@ -76,6 +80,7 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
     };
     // Wallpaper identity changes with mode/market, so forget the last key and refetch.
     keyRef.current = null;
+    idRef.current = null;
     check();
     const id = setInterval(check, 60_000);
     return () => {
@@ -99,7 +104,11 @@ function Rotating({ mode, market }: { mode: string; market: string }) {
     <div className="bg">
       <Starry /> {/* base layer while first image loads / behind fade */}
       {layers.map((l) => (
-        <div key={l.info.key} className="bg-photo" style={{ opacity: l.visible ? 1 : 0, backgroundImage: `url("${l.url}")` }} />
+        <div
+          key={`${l.info.key}-${l.info.item.id}`}
+          className="bg-photo"
+          style={{ opacity: l.visible ? 1 : 0, backgroundImage: `url("${l.url}")` }}
+        />
       ))}
       <div className="bg-scrim" />
       {credit && <div className="bg-credit">{credit}</div>}

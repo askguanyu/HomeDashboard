@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig, type DashboardConfig } from './config.js';
 import { getHolidays } from './sources/holidays.js';
 import { getMacroEvents, startMacroMaintenance } from './sources/macro.js';
-import { getCurrent, getBingCurrent, getMixedCurrent, getBackgroundFile } from './sources/background.js';
+import { pickBackground as pickWallpaper, getBackgroundFile, markBackgroundBad, isDeadAssetError, sniffImageType } from './sources/background.js';
 import { getWeather } from './sources/weather.js';
 import { getQuotes } from './sources/quotes.js';
 import { getSystemDebug, getSystemLoad, startSystemSampler } from './sources/system.js';
@@ -75,10 +75,7 @@ app.get('/api/macro', async (req, res) => {
 });
 
 /** Picks mix / nasa-rotate / bing-daily / bing-rotate (+market) for a mode/market pair. */
-const pickFor = (mode: string, market: string, at?: number) => {
-  if (mode === 'mix') return getMixedCurrent(ROOT, market, at);
-  return mode.startsWith('bing') ? getBingCurrent(ROOT, mode, market, at) : getCurrent(ROOT, at);
-};
+const pickFor = (mode: string, market: string, at?: number) => pickWallpaper(ROOT, mode, market, at);
 
 /** Same, driven by the request query. */
 const pickBackground = (req: Request) =>
@@ -100,8 +97,10 @@ app.get('/api/background', async (req, res) => {
 });
 
 app.get('/api/background/image', async (req, res) => {
+  let itemId: string | null = null;
   try {
     const { item } = await pickBackground(req);
+    itemId = item.id;
     const file = await getBackgroundFile(ROOT, item);
     // The hour key in `k=` makes every rotation a distinct URL, so even a browser that
     // answers a repeat URL from its cache without revalidating still gets new art. Within
@@ -109,10 +108,13 @@ app.get('/api/background/image', async (req, res) => {
     // getBackgroundFile touches mtime on every hit (LRU), so stat-derived validators churn.
     res.setHeader('cache-control', 'public, max-age=0, must-revalidate');
     res.set('etag', `"bg-${item.id}"`);
-    res.type('image/jpeg').sendFile(file, { etag: false, lastModified: false }, (err) => {
+    res.type(sniffImageType(file)).sendFile(file, { etag: false, lastModified: false }, (err) => {
       if (err && !res.headersSent) res.status(502).json({ error: 'background file unreadable' });
     });
   } catch (err) {
+    // Only a definitive upstream 404/410 blacklists the id; outages/timeouts must not poison
+    // the pool (the hour stays pinned to its pick and the client simply keeps the last photo).
+    if (itemId && isDeadAssetError(err)) markBackgroundBad(ROOT, itemId);
     res.status(502).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
